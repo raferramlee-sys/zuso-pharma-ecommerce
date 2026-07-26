@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: 'Inter', system-ui, sans-serif;
+
+  /* Pharma design system — from ATHERYX / ELYISION packaging */
+  --color-pharma-950: #06061a;
+  --color-pharma-900: #0a0a24;
+  --color-pharma-850: #0d0d2b;
+  --color-pharma-800: #12123a;
+  --color-pharma-700: #1a1a4a;
+  --color-pharma-600: #25255a;
+  --color-pharma-500: #3a3a7a;
+  --color-pharma-400: #5a5a9a;
+  --color-pharma-300: #8080b8;
+  --color-pharma-200: #a0a0c0;
+  --color-pharma-100: #c8c8e0;
+
+  --color-accent-600: #5b21b6;
+  --color-accent-500: #7c3aed;
+  --color-accent-400: #9575cd;
+  --color-accent-300: #b39ddb;
+  --color-accent-200: #d1c4e9;
+
+  --color-brand-atheryx: #7c3aed;
+  --color-brand-elysion: #9575cd;
+
+  --radius-card: 0.75rem;
+  --radius-btn: 0.5rem;
+}
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    background: #06061a;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background: #06061a;
+    color: #ffffff;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #0a0a24; }
+  ::-webkit-scrollbar-thumb { background: #3a3a7a; border-radius: 3px; }
+}
+
+/* Holographic shimmer effect */
+@keyframes holographic {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.holographic-border {
+  border: 1px solid transparent;
+  background: linear-gradient(#0d0d2b, #0d0d2b) padding-box,
+              linear-gradient(135deg, #7c3aed, #9575cd, #b39ddb, #7c3aed) border-box;
+}
+
+.holographic-shimmer {
+  background: linear-gradient(135deg, #7c3aed 0%, #9575cd 25%, #b39ddb 50%, #7c3aed 75%, #9575cd 100%);
+  background-size: 400% 400%;
+  animation: holographic 3s ease infinite;
+}
+
+/* Glow effects */
+.glow-purple {
+  box-shadow: 0 0 40px rgba(124, 58, 237, 0.15), 0 0 80px rgba(124, 58, 237, 0.05);
+}
+
+.glow-text {
+  text-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+}

@@ -1,0 +1,57 @@
+import { useSearchParams } from 'react-router-dom'
+import ProductCard from '../components/product/ProductCard'
+import { products } from '../lib/products'
+
+export default function ProductsPage() {
+  const [searchParams] = useSearchParams()
+  const brandFilter = searchParams.get('brand')
+
+  const filtered = brandFilter
+    ? products.filter(p => p.brand === brandFilter)
+    : products
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Header */}
+      <div className="mb-10">
+        <h1 className="text-3xl font-bold text-white">
+          {brandFilter === 'atheryx' ? (
+            <span className="text-brand-atheryx">ATHERYX™</span>
+          ) : brandFilter === 'elysion' ? (
+            <span className="text-brand-elysion">ELYISION™</span>
+          ) : (
+            'All Products'
+          )}
+        </h1>
+        <p className="mt-2 text-pharma-400 text-sm">
+          {brandFilter
+            ? `${brandFilter === 'atheryx' ? 'Retatrutide' : 'Tirzepatide'} peptide therapy — precision multi-dose pens`
+            : 'Advanced peptide therapies in precision multi-dose pens'
+          }
+        </p>
+      </div>
+
+      {/* Brand tabs */}
+      {!brandFilter && (
+        <div className="flex gap-3 mb-8">
+          <a href="/products" className="px-4 py-2 text-sm font-medium rounded-btn bg-accent-500 text-white">All</a>
+          <a href="/products?brand=atheryx" className="px-4 py-2 text-sm font-medium rounded-btn border border-pharma-600 text-pharma-300 hover:text-white hover:border-pharma-400 transition-colors">ATHERYX™</a>
+          <a href="/products?brand=elysion" className="px-4 py-2 text-sm font-medium rounded-btn border border-pharma-600 text-pharma-300 hover:text-white hover:border-pharma-400 transition-colors">ELYISION™</a>
+        </div>
+      )}
+
+      {/* Product grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {filtered.map(product => (
+          <ProductCard key={product.id} product={product} />
+        ))}
+      </div>
+
+      {filtered.length === 0 && (
+        <div className="text-center py-20">
+          <p className="text-pharma-400">No products found.</p>
+        </div>
+      )}
+    </div>
+  )
+}
