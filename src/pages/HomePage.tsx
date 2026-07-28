@@ -4,7 +4,7 @@ import { products } from '../lib/products'
 import ProductCard from '../components/product/ProductCard'
 
 export default function HomePage() {
-  const canonicalUrl = typeof window !== 'undefined' ? window.location.origin : 'https://pharma.zuso-boltz-agentic.app'
+  const canonicalUrl = 'https://pharma.zuso-boltz-agentic.app'
 
   const orgJsonLd = {
     '@context': 'https://schema.org',
@@ -43,6 +43,9 @@ export default function HomePage() {
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:type" content="website" />
+        <meta property="og:locale" content="en_MY" />
+        <link rel="alternate" hreflang="en-MY" href={canonicalUrl} />
+        <link rel="alternate" hreflang="x-default" href={canonicalUrl} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@zusopharma" />
         <meta name="twitter:title" content="ATHERYX™ & ELYSION™ — Peptide Therapy Malaysia | FDA Approved" />

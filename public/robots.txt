@@ -1,5 +1,24 @@
+User-agent: Googlebot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: Bingbot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: Twitterbot
+Allow: /
+Disallow: /admin/
+
+User-agent: facebookexternalhit
+Allow: /
+Disallow: /admin/
+
 User-agent: *
 Allow: /
+Disallow: /admin/
 Disallow: /api/
 
 Sitemap: https://pharma.zuso-boltz-agentic.app/sitemap.xml

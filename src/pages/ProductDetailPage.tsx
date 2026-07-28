@@ -22,7 +22,7 @@ export default function ProductDetailPage() {
   const bgGlow = isAtheryx ? 'bg-brand-atheryx/10' : 'bg-brand-elysion/10'
   const brandName = isAtheryx ? 'ATHERYX' : 'ELYSION'
 
-  const canonicalUrl = typeof window !== 'undefined' ? window.location.href : `https://pharma.zuso-boltz-agentic.app/product/${product.slug}`
+  const canonicalUrl = `https://pharma.zuso-boltz-agentic.app/product/${product.slug}`
   const pageTitle = `${brandName}™ ${product.peptide} ${product.dosage_mg}mg Malaysia — RM ${product.price_myr.toLocaleString()}`
   const descriptionExcerpt = product.description.length > 160 ? product.description.substring(0, 157) + '...' : product.description
 

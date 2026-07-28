@@ -6,7 +6,7 @@ import { products } from '../lib/products'
 export default function ProductsPage() {
   const [searchParams] = useSearchParams()
   const brandFilter = searchParams.get('brand')
-  const canonicalUrl = typeof window !== 'undefined' ? window.location.origin + window.location.pathname : 'https://pharma.zuso-boltz-agentic.app/products'
+  const canonicalUrl = 'https://pharma.zuso-boltz-agentic.app/products'
 
   const filtered = brandFilter
     ? products.filter(p => p.brand === brandFilter)
