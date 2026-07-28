@@ -138,17 +138,38 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* ATHERYX Featured Card */}
-            <Link to="/product/atheryx-retatrutide-30mg" className="group relative holographic-border rounded-card p-6 bg-pharma-850/80 hover:bg-pharma-800 transition-all duration-300 overflow-hidden">
+            {/* ATHERYX Featured Card — promo-matched */}
+            <Link to="/product/atheryx-retatrutide-30mg" className="group relative atheryx-card rounded-card p-6 transition-all duration-300 overflow-hidden">
               <div className="absolute top-0 right-0 w-40 h-40 bg-brand-atheryx/10 rounded-full blur-3xl group-hover:bg-brand-atheryx/20 transition-colors" />
               <div className="relative">
-                <span className="text-xs font-bold tracking-widest uppercase text-brand-atheryx">ATHERYX™</span>
-                <h3 className="text-xl font-bold text-white mt-2">Retatrutide</h3>
-                <p className="text-sm text-pharma-400 mt-1">Triple-agonist • GLP-1 / GIP / Glucagon</p>
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <span className="text-lg font-black text-brand-atheryx tracking-tight">ATHERYX™</span>
+                    <p className="text-xs font-semibold text-white mt-0.5">METABOLISM MODULATOR PEN</p>
+                    <p className="text-[10px] text-pharma-400 mt-0.5">TRIPLE INCRETIN-GLUCAGON RECEPTOR AGONIST</p>
+                  </div>
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded border border-accent-600/30 text-accent-400 bg-accent-600/10 shrink-0">FDA APPROVED</span>
+                </div>
+
                 <div className="flex items-center gap-3 mt-4">
                   <span className="text-3xl font-black text-white">30mg</span>
                   <span className="text-xs text-pharma-400">(6mg × 5 doses)</span>
                   <span className="ml-auto text-lg font-bold text-white">RM 1,280</span>
+                </div>
+
+                {/* Icon row */}
+                <div className="flex justify-center gap-3 mt-5 pt-4 border-t border-brand-atheryx/10">
+                  {[
+                    ['🎯', 'Precise Dosing'],
+                    ['🛡️', 'Premium Quality'],
+                    ['📊', 'Optimal Result'],
+                    ['🧪', 'Research Backed'],
+                  ].map(([icon, label]) => (
+                    <div key={label} className="flex flex-col items-center gap-0.5">
+                      <span className="text-sm opacity-70">{icon}</span>
+                      <span className="text-[0.55rem] font-semibold text-pharma-400 uppercase tracking-wider">{label}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </Link>
