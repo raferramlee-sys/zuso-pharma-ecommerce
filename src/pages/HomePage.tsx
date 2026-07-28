@@ -65,6 +65,15 @@ export default function HomePage() {
                 </span>
               </h1>
 
+              {/* ATHERYX Pen Image */}
+              <div className="mt-8 flex justify-center">
+                <img
+                  src="/atheryx-pen.jpg"
+                  alt="ATHERYX™ Precision Peptide Pen — 0.6ml × 5 doses"
+                  className="w-48 sm:w-56 md:w-64 object-contain drop-shadow-[0_0_40px_rgba(168,85,247,0.3)]"
+                />
+              </div>
+
               <p className="mt-6 text-lg text-pharma-300 max-w-xl mx-auto leading-relaxed">
                 ATHERYX™ Retatrutide and ELYSION™ Tirzepatide — 
                 clinically advanced peptide therapies in precision multi-dose pens. 
