@@ -66,7 +66,7 @@ export default function ProductDetailPage() {
           </div>
 
           <div className="inline-block text-xs font-medium px-3 py-1 rounded border border-pharma-600 text-pharma-300 mt-3">
-            {product.volume_ml} | {product.is_ezipen ? 'Ezipen Pre-filled Pen' : 'Multi-dose Pen'}
+            {product.volume_ml} | Multi-dose Pen
           </div>
 
           {/* Ezipen display name */}

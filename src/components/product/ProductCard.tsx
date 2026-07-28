@@ -37,7 +37,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
         {/* Volume / Pen type */}
         <div className="inline-block text-[10px] font-medium px-2 py-0.5 rounded border border-pharma-600 text-pharma-300 mb-4">
-          {product.volume_ml} | {product.is_ezipen ? 'Ezipen' : 'Multi-dose Pen'}
+          {product.volume_ml} | Multi-dose Pen
         </div>
 
         {/* Features (3 max) */}
