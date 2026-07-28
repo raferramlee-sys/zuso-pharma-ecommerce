@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
-Sitemap: https://zuso-pharma-ecommerce.vercel.app/sitemap.xml
+Sitemap: https://pharma.zuso-boltz-agentic.app/sitemap.xml

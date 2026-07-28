@@ -1,58 +1,69 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://zuso-pharma-ecommerce.vercel.app/</loc>
+    <loc>https://pharma.zuso-boltz-agentic.app/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+    <lastmod>2025-07-28</lastmod>
   </url>
   <url>
-    <loc>https://zuso-pharma-ecommerce.vercel.app/products</loc>
+    <loc>https://pharma.zuso-boltz-agentic.app/products</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
+    <lastmod>2025-07-28</lastmod>
   </url>
   <url>
-    <loc>https://zuso-pharma-ecommerce.vercel.app/product/atheryx-retatrutide-10mg</loc>
+    <loc>https://pharma.zuso-boltz-agentic.app/product/atheryx-retatrutide-10mg</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+    <lastmod>2025-07-28</lastmod>
   </url>
   <url>
-    <loc>https://zuso-pharma-ecommerce.vercel.app/product/atheryx-retatrutide-30mg</loc>
+    <loc>https://pharma.zuso-boltz-agentic.app/product/atheryx-retatrutide-30mg</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+    <lastmod>2025-07-28</lastmod>
   </url>
   <url>
-    <loc>https://zuso-pharma-ecommerce.vercel.app/product/atheryx-retatrutide-60mg</loc>
+    <loc>https://pharma.zuso-boltz-agentic.app/product/atheryx-retatrutide-60mg</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+    <lastmod>2025-07-28</lastmod>
   </url>
   <url>
-    <loc>https://zuso-pharma-ecommerce.vercel.app/product/elysion-tirzepatide-30mg</loc>
+    <loc>https://pharma.zuso-boltz-agentic.app/product/elysion-tirzepatide-30mg</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+    <lastmod>2025-07-28</lastmod>
   </url>
   <url>
-    <loc>https://zuso-pharma-ecommerce.vercel.app/product/elysion-tirzepatide-60mg</loc>
+    <loc>https://pharma.zuso-boltz-agentic.app/product/elysion-tirzepatide-60mg</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+    <lastmod>2025-07-28</lastmod>
   </url>
   <url>
-    <loc>https://zuso-pharma-ecommerce.vercel.app/product/elysion-tirzepatide-ezipen-12-5mg</loc>
+    <loc>https://pharma.zuso-boltz-agentic.app/product/elysion-tirzepatide-ezipen-12-5mg</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+    <lastmod>2025-07-28</lastmod>
   </url>
   <url>
-    <loc>https://zuso-pharma-ecommerce.vercel.app/product/elysion-tirzepatide-ezipen-25mg</loc>
+    <loc>https://pharma.zuso-boltz-agentic.app/product/elysion-tirzepatide-ezipen-25mg</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+    <lastmod>2025-07-28</lastmod>
   </url>
   <url>
-    <loc>https://zuso-pharma-ecommerce.vercel.app/product/elysion-tirzepatide-ezipen-50mg</loc>
+    <loc>https://pharma.zuso-boltz-agentic.app/product/elysion-tirzepatide-ezipen-50mg</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+    <lastmod>2025-07-28</lastmod>
   </url>
   <url>
-    <loc>https://zuso-pharma-ecommerce.vercel.app/product/elysion-tirzepatide-ezipen-75mg</loc>
+    <loc>https://pharma.zuso-boltz-agentic.app/product/elysion-tirzepatide-ezipen-75mg</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+    <lastmod>2025-07-28</lastmod>
   </url>
 </urlset>

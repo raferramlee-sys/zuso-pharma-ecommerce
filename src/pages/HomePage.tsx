@@ -4,7 +4,7 @@ import { products } from '../lib/products'
 import ProductCard from '../components/product/ProductCard'
 
 export default function HomePage() {
-  const canonicalUrl = typeof window !== 'undefined' ? window.location.origin : 'https://zuso-pharma-ecommerce.vercel.app'
+  const canonicalUrl = typeof window !== 'undefined' ? window.location.origin : 'https://pharma.zuso-boltz-agentic.app'
 
   const orgJsonLd = {
     '@context': 'https://schema.org',
@@ -39,6 +39,15 @@ export default function HomePage() {
         <meta property="og:title" content="ATHERYX™ & ELYSION™ — Peptide Therapy Malaysia | FDA Approved" />
         <meta property="og:description" content="Advanced peptide therapy in Malaysia. ATHERYX Retatrutide & ELYSION Tirzepatide — legit, FDA-approved weight loss injections." />
         <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:image" content="https://pharma.zuso-boltz-agentic.app/og-image.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@zusopharma" />
+        <meta name="twitter:title" content="ATHERYX™ & ELYSION™ — Peptide Therapy Malaysia | FDA Approved" />
+        <meta name="twitter:description" content="Advanced peptide therapy in Malaysia. ATHERYX Retatrutide & ELYSION Tirzepatide — legit, FDA-approved weight loss injections." />
+        <meta name="twitter:image" content="https://pharma.zuso-boltz-agentic.app/og-image.png" />
         <script type="application/ld+json">{JSON.stringify(orgJsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(webJsonLd)}</script>
       </Helmet>

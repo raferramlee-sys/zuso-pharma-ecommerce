@@ -22,7 +22,7 @@ export default function ProductDetailPage() {
   const bgGlow = isAtheryx ? 'bg-brand-atheryx/10' : 'bg-brand-elysion/10'
   const brandName = isAtheryx ? 'ATHERYX' : 'ELYSION'
 
-  const canonicalUrl = typeof window !== 'undefined' ? window.location.href : `https://zuso-pharma-ecommerce.vercel.app/product/${product.slug}`
+  const canonicalUrl = typeof window !== 'undefined' ? window.location.href : `https://pharma.zuso-boltz-agentic.app/product/${product.slug}`
   const pageTitle = `${brandName}™ ${product.peptide} ${product.dosage_mg}mg Malaysia — RM ${product.price_myr.toLocaleString()}`
   const descriptionExcerpt = product.description.length > 160 ? product.description.substring(0, 157) + '...' : product.description
 
@@ -64,6 +64,17 @@ export default function ProductDetailPage() {
         <meta property="og:type" content="product" />
         <meta property="product:price:amount" content={product.price_myr.toString()} />
         <meta property="product:price:currency" content="MYR" />
+        <meta property="og:image" content={isAtheryx ? 'https://pharma.zuso-boltz-agentic.app/atheryx-packaging.jpg' : 'https://pharma.zuso-boltz-agentic.app/elysion-packaging.jpg'} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@zusopharma" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={descriptionExcerpt} />
+        <meta name="twitter:image" content={isAtheryx ? 'https://pharma.zuso-boltz-agentic.app/atheryx-packaging.jpg' : 'https://pharma.zuso-boltz-agentic.app/elysion-packaging.jpg'} />
+        <meta property="og:locale" content="en_MY" />
+        <link rel="alternate" hreflang="en-MY" href={canonicalUrl} />
+        <link rel="alternate" hreflang="x-default" href={canonicalUrl} />
         <script type="application/ld+json">{JSON.stringify(productJsonLd)}</script>
       </Helmet>
 

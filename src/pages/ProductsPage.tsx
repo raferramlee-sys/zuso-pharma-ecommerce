@@ -6,7 +6,7 @@ import { products } from '../lib/products'
 export default function ProductsPage() {
   const [searchParams] = useSearchParams()
   const brandFilter = searchParams.get('brand')
-  const canonicalUrl = typeof window !== 'undefined' ? window.location.origin + window.location.pathname : 'https://zuso-pharma-ecommerce.vercel.app/products'
+  const canonicalUrl = typeof window !== 'undefined' ? window.location.origin + window.location.pathname : 'https://pharma.zuso-boltz-agentic.app/products'
 
   const filtered = brandFilter
     ? products.filter(p => p.brand === brandFilter)
@@ -31,6 +31,31 @@ export default function ProductsPage() {
         <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={pageDesc} />
         <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:image" content="https://pharma.zuso-boltz-agentic.app/og-image.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@zusopharma" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDesc} />
+        <meta name="twitter:image" content="https://pharma.zuso-boltz-agentic.app/og-image.png" />
+        <meta property="og:locale" content="en_MY" />
+        <link rel="alternate" hreflang="en-MY" href={canonicalUrl} />
+        <link rel="alternate" hreflang="x-default" href={canonicalUrl} />
+        <script type="application/ld+json">{JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          itemListElement: products.map((p, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            item: {
+              '@type': 'Product',
+              name: `${p.brand === 'atheryx' ? 'ATHERYX™' : 'ELYSION™'} ${p.peptide} ${p.dosage_mg}mg`,
+              url: `https://pharma.zuso-boltz-agentic.app/product/${p.slug}`,
+            },
+          })),
+        })}</script>
       </Helmet>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
