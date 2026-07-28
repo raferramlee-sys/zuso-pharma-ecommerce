@@ -78,16 +78,22 @@ export default function ProductDetailPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Left — Product Image Placeholder */}
+          {/* Left — Product Image */}
           <div className="relative">
-            <div className={`aspect-square rounded-card ${bgGlow} border border-pharma-700/50 flex items-center justify-center overflow-hidden`}>
-              <div className="text-center p-10">
-                <div className={`text-8xl font-black ${brandColor} opacity-30 mb-4`}>
-                  {isAtheryx ? 'A' : 'E'}
-                </div>
-                <p className="text-pharma-400 text-sm">Product Image</p>
+            {product.images[0] ? (
+              <div className="rounded-card overflow-hidden border border-pharma-700/50">
+                <img src={product.images[0]} alt={product.name} className="w-full object-cover aspect-square" />
               </div>
-            </div>
+            ) : (
+              <div className={`aspect-square rounded-card ${bgGlow} border border-pharma-700/50 flex items-center justify-center overflow-hidden`}>
+                <div className="text-center p-10">
+                  <div className={`text-8xl font-black ${brandColor} opacity-30 mb-4`}>
+                    {isAtheryx ? 'A' : 'E'}
+                  </div>
+                  <p className="text-pharma-400 text-sm">Product Image</p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right — Product Info */}
