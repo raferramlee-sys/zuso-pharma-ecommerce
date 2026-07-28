@@ -73,7 +73,7 @@
 .atheryx-holographic-border {
   border: 1px solid transparent;
   background: linear-gradient(#0d0d2b, #0d0d2b) padding-box,
-              linear-gradient(135deg, #8b0000, #c41e3a, #a52a2a, #8b0000) border-box;
+              linear-gradient(135deg, #4a1535, #7b2d5e, #6b1d4a, #4a1535) border-box;
 }
 
 .holographic-shimmer {
@@ -95,13 +95,13 @@
 
 .atheryx-card {
   border: 1px solid transparent;
-  background: linear-gradient(180deg, rgba(139, 0, 0, 0.08) 0%, rgba(13, 13, 43, 0.97) 100%) padding-box,
-              linear-gradient(135deg, #8b0000, #c41e3a, #a52a2a, #8b0000) border-box;
+  background: linear-gradient(180deg, rgba(91, 21, 60, 0.12) 0%, rgba(13, 13, 43, 0.97) 100%) padding-box,
+              linear-gradient(135deg, #4a1535, #7b2d5e, #6b1d4a, #4a1535) border-box;
 }
 
 .atheryx-card:hover {
-  background: linear-gradient(180deg, rgba(139, 0, 0, 0.14) 0%, rgba(13, 13, 43, 0.97) 100%) padding-box,
-              linear-gradient(135deg, #c41e3a, #a52a2a, #8b0000, #c41e3a) border-box;
+  background: linear-gradient(180deg, rgba(91, 21, 60, 0.18) 0%, rgba(13, 13, 43, 0.97) 100%) padding-box,
+              linear-gradient(135deg, #7b2d5e, #8b3a6e, #6b1d4a, #7b2d5e) border-box;
 }
 
 .atheryx-icon-row {
