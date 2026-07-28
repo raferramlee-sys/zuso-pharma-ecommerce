@@ -94,20 +94,22 @@ export default function HomePage() {
                 FDA approved, manufactured in Malaysia.
               </p>
 
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10">
-                <Link
-                  to="/products"
-                  className="px-8 py-3.5 rounded-btn bg-accent-500 hover:bg-accent-600 text-white font-semibold transition-colors shadow-lg shadow-accent-500/20"
-                >
-                  Explore Products
-                </Link>
-                <Link
-                  to="/products"
-                  className="px-8 py-3.5 rounded-btn border border-pharma-600 text-pharma-200 hover:text-white hover:border-pharma-400 transition-colors"
-                >
-                  Learn More
-                </Link>
-              </div>
+              {/* Explore Products — packaging card */}
+              <Link to="/products" className="block mt-10 max-w-md mx-auto group">
+                <div className="relative rounded-xl overflow-hidden border border-brand-atheryx/20 hover:border-brand-atheryx/50 transition-all duration-300 shadow-lg shadow-brand-atheryx/10 hover:shadow-brand-atheryx/25">
+                  <img
+                    src="/atheryx-packaging.jpg"
+                    alt="ATHERYX™ Metabolism Modulator Pen — Explore Products"
+                    className="w-full object-cover aspect-[16/10] group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-pharma-950/90 via-pharma-950/20 to-transparent flex items-end justify-center pb-5">
+                    <span className="px-6 py-2.5 rounded-btn bg-accent-500/90 backdrop-blur-sm text-white text-sm font-semibold group-hover:bg-accent-500 transition-colors shadow-lg">
+                      Explore Products →
+                    </span>
+                  </div>
+                </div>
+                <p className="text-center text-xs text-pharma-400 mt-3">ATHERYX™ — Precision peptide therapy in Malaysia</p>
+              </Link>
             </div>
           </div>
         </section>
