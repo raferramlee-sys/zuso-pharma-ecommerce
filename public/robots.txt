@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: https://zuso-pharma-ecommerce.vercel.app/sitemap.xml
