@@ -155,6 +155,13 @@ export default function ProductCard({ product }: { product: Product }) {
           {product.volume_ml} PER DOSE
         </div>
 
+        {/* Packaging image */}
+        {product.images[0] && (
+          <div className="mb-4 rounded-lg overflow-hidden border border-brand-elysion/15">
+            <img src={product.images[0]} alt={product.name} className="w-full object-cover aspect-[16/10]" />
+          </div>
+        )}
+
         {/* Peptide name + dosage */}
         <p className="text-xs text-pharma-400 mb-1">{product.peptide}</p>
         <div className="flex items-baseline gap-2 mb-1">
