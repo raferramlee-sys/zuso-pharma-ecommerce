@@ -6,6 +6,7 @@ export interface Product {
   peptide: string
   dosage_mg: number
   doses_per_pen: number
+  per_dose_mg: number
   volume_ml: string
   price_myr: number
   description: string
@@ -17,6 +18,8 @@ export interface Product {
   fda_approved: boolean
   stock: number
   active: boolean
+  is_ezipen?: boolean
+  display_name?: string
   created_at?: string
 }
 

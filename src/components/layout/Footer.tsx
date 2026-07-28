@@ -16,7 +16,7 @@ export default function Footer() {
             <h4 className="text-sm font-semibold text-white mb-3">Products</h4>
             <ul className="space-y-2 text-sm text-pharma-300">
               <li>ATHERYX™ — Retatrutide</li>
-              <li>ELYISION™ — Tirzepatide</li>
+              <li>ELYSION™ — Tirzepatide</li>
             </ul>
           </div>
           <div>

@@ -47,7 +47,7 @@ export default function CartDrawer() {
                         {item.brand === 'atheryx' ? (
                           <span className="text-brand-atheryx">ATHERYX™</span>
                         ) : (
-                          <span className="text-brand-elysion">ELYISION™</span>
+                          <span className="text-brand-elysion">ELYSION™</span>
                         )}{' '}
                         {item.dosage_mg}mg
                       </p>

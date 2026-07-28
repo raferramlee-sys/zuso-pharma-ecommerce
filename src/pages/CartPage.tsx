@@ -40,7 +40,7 @@ export default function CartPage() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span className={`text-xs font-bold tracking-widest uppercase ${item.brand === 'atheryx' ? 'text-brand-atheryx' : 'text-brand-elysion'}`}>
-                  {item.brand === 'atheryx' ? 'ATHERYX™' : 'ELYISION™'}
+                  {item.brand === 'atheryx' ? 'ATHERYX™' : 'ELYSION™'}
                 </span>
                 <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded border border-accent-600/20 text-accent-400 bg-accent-600/5">
                   FDA

@@ -28,7 +28,7 @@ export default function HomePage() {
             </h1>
 
             <p className="mt-6 text-lg text-pharma-300 max-w-xl mx-auto leading-relaxed">
-              ATHERYX™ Retatrutide and ELYISION™ Tirzepatide — 
+              ATHERYX™ Retatrutide and ELYSION™ Tirzepatide — 
               clinically advanced peptide therapies in precision multi-dose pens. 
               FDA approved, manufactured in Malaysia.
             </p>
@@ -96,22 +96,22 @@ export default function HomePage() {
               <div className="flex items-center gap-3 mt-4">
                 <span className="text-3xl font-black text-white">30mg</span>
                 <span className="text-xs text-pharma-400">(6mg × 5 doses)</span>
-                <span className="ml-auto text-lg font-bold text-white">RM 899</span>
+                <span className="ml-auto text-lg font-bold text-white">RM 1,280</span>
               </div>
             </div>
           </Link>
 
-          {/* ELYISION Featured Card */}
+          {/* ELYSION Featured Card */}
           <Link to="/product/elysion-tirzepatide-30mg" className="group relative holographic-border rounded-card p-6 bg-pharma-850/80 hover:bg-pharma-800 transition-all duration-300 overflow-hidden">
             <div className="absolute top-0 right-0 w-40 h-40 bg-brand-elysion/10 rounded-full blur-3xl group-hover:bg-brand-elysion/20 transition-colors" />
             <div className="relative">
-              <span className="text-xs font-bold tracking-widest uppercase text-brand-elysion">ELYISION™</span>
+              <span className="text-xs font-bold tracking-widest uppercase text-brand-elysion">ELYSION™</span>
               <h3 className="text-xl font-bold text-white mt-2">Tirzepatide</h3>
               <p className="text-sm text-pharma-400 mt-1">Dual-agonist • GIP / GLP-1</p>
               <div className="flex items-center gap-3 mt-4">
                 <span className="text-3xl font-black text-white">30mg</span>
                 <span className="text-xs text-pharma-400">(6mg × 5 doses)</span>
-                <span className="ml-auto text-lg font-bold text-white">RM 799</span>
+                <span className="ml-auto text-lg font-bold text-white">RM 1,088</span>
               </div>
             </div>
           </Link>
@@ -139,7 +139,7 @@ export default function HomePage() {
               Ready to experience advanced peptide therapy?
             </h2>
             <p className="text-pharma-300 text-sm max-w-md mx-auto mb-8">
-              Browse our full range of ATHERYX™ and ELYISION™ peptide pens. 
+              Browse our full range of ATHERYX™ and ELYSION™ peptide pens. 
               Prescription required — consult your healthcare provider.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

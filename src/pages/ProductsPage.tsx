@@ -18,7 +18,7 @@ export default function ProductsPage() {
           {brandFilter === 'atheryx' ? (
             <span className="text-brand-atheryx">ATHERYX™</span>
           ) : brandFilter === 'elysion' ? (
-            <span className="text-brand-elysion">ELYISION™</span>
+            <span className="text-brand-elysion">ELYSION™</span>
           ) : (
             'All Products'
           )}
@@ -36,7 +36,7 @@ export default function ProductsPage() {
         <div className="flex gap-3 mb-8">
           <a href="/products" className="px-4 py-2 text-sm font-medium rounded-btn bg-accent-500 text-white">All</a>
           <a href="/products?brand=atheryx" className="px-4 py-2 text-sm font-medium rounded-btn border border-pharma-600 text-pharma-300 hover:text-white hover:border-pharma-400 transition-colors">ATHERYX™</a>
-          <a href="/products?brand=elysion" className="px-4 py-2 text-sm font-medium rounded-btn border border-pharma-600 text-pharma-300 hover:text-white hover:border-pharma-400 transition-colors">ELYISION™</a>
+          <a href="/products?brand=elysion" className="px-4 py-2 text-sm font-medium rounded-btn border border-pharma-600 text-pharma-300 hover:text-white hover:border-pharma-400 transition-colors">ELYSION™</a>
         </div>
       )}
 

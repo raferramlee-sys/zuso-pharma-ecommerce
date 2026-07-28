@@ -15,25 +15,29 @@ export default function ProductCard({ product }: { product: Product }) {
         {/* Brand + Badge */}
         <div className="flex items-start justify-between mb-3">
           <span className={`text-xs font-bold tracking-widest uppercase ${isAtheryx ? 'text-brand-atheryx' : 'text-brand-elysion'}`}>
-            {isAtheryx ? 'ATHERYX' : 'ELYISION'}
+            {isAtheryx ? 'ATHERYX' : 'ELYSION'}
           </span>
           <span className="text-[10px] font-semibold px-2 py-0.5 rounded border border-accent-600/30 text-accent-400 bg-accent-600/10">
             FDA APPROVED
           </span>
         </div>
 
-        {/* Peptide name */}
-        <p className="text-xs text-pharma-400 mb-2">{product.peptide}</p>
+        {/* Peptide name + Ezipen display name */}
+        {product.is_ezipen && product.display_name ? (
+          <p className="text-xs font-semibold text-pharma-200 mb-1">{product.display_name}</p>
+        ) : (
+          <p className="text-xs text-pharma-400 mb-2">{product.peptide}</p>
+        )}
 
         {/* Dosage */}
         <div className="flex items-baseline gap-2 mb-1">
           <span className="text-3xl font-black text-white">{product.dosage_mg}mg</span>
-          <span className="text-xs text-pharma-400">({product.dosage_mg / product.doses_per_pen}mg × {product.doses_per_pen} doses)</span>
+          <span className="text-xs text-pharma-400">({product.per_dose_mg}mg × {product.doses_per_pen} doses)</span>
         </div>
 
-        {/* Volume */}
+        {/* Volume / Pen type */}
         <div className="inline-block text-[10px] font-medium px-2 py-0.5 rounded border border-pharma-600 text-pharma-300 mb-4">
-          {product.volume_ml} | Multi-dose Pen
+          {product.volume_ml} | {product.is_ezipen ? 'Ezipen' : 'Multi-dose Pen'}
         </div>
 
         {/* Features (3 max) */}

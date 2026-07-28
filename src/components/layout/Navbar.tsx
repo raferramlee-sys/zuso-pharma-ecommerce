@@ -33,7 +33,7 @@ export default function Navbar() {
                 to="/products?brand=elysion"
                 className={`text-sm transition-colors ${location.search.includes('elysion') ? 'text-brand-elysion' : 'text-pharma-300 hover:text-white'}`}
               >
-                ELYISION
+                ELYSION
               </Link>
             </div>
           </div>

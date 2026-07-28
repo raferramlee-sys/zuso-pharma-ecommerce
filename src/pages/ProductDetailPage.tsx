@@ -49,7 +49,7 @@ export default function ProductDetailPage() {
           {/* Brand + Badges */}
           <div className="flex items-center gap-3 mb-3">
             <span className={`text-xs font-bold tracking-widest uppercase ${brandColor}`}>
-              {isAtheryx ? 'ATHERYX™' : 'ELYISION™'}
+              {isAtheryx ? 'ATHERYX™' : 'ELYSION™'}
             </span>
             <span className="text-[10px] font-semibold px-2 py-0.5 rounded border border-accent-600/30 text-accent-400 bg-accent-600/10">
               FDA APPROVED
@@ -62,12 +62,17 @@ export default function ProductDetailPage() {
           {/* Dosage */}
           <div className="flex items-baseline gap-3 mt-6">
             <span className="text-5xl font-black text-white">{product.dosage_mg}mg</span>
-            <span className="text-sm text-pharma-400">({product.dosage_mg / product.doses_per_pen}mg × {product.doses_per_pen} doses)</span>
+            <span className="text-sm text-pharma-400">({product.per_dose_mg}mg × {product.doses_per_pen} doses)</span>
           </div>
 
           <div className="inline-block text-xs font-medium px-3 py-1 rounded border border-pharma-600 text-pharma-300 mt-3">
-            {product.volume_ml} | Multi-dose Pen
+            {product.volume_ml} | {product.is_ezipen ? 'Ezipen Pre-filled Pen' : 'Multi-dose Pen'}
           </div>
+
+          {/* Ezipen display name */}
+          {product.is_ezipen && product.display_name && (
+            <p className="mt-3 text-sm font-semibold text-pharma-200 bg-pharma-850/60 px-3 py-1.5 rounded border border-pharma-700/50">{product.display_name}</p>
+          )}
 
           {/* Description */}
           <p className="mt-6 text-pharma-300 leading-relaxed text-sm">{product.description}</p>
