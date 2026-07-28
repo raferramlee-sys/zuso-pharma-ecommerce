@@ -72,7 +72,7 @@ export default function HomePage() {
               {/* ATHERYX Pen — clean, no frame, no glow */}
               <div className="mt-10 flex justify-center">
                 <img
-                  src="/atheryx-pen.jpg"
+                  src="/atheryx-pen.png"
                   alt="ATHERYX™ Precision Peptide Pen"
                   className="w-[220px] sm:w-[280px] md:w-[320px] object-contain"
                 />
