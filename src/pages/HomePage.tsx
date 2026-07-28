@@ -46,15 +46,18 @@ export default function HomePage() {
       <div>
         {/* Hero Section */}
         <section className="relative overflow-hidden">
-        {/* Background — ATHERYX pen image */}
-        <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-          <img
-            src="/atheryx-pen.jpg"
-            alt=""
-            className="w-[280px] sm:w-[340px] md:w-[400px] object-contain opacity-50 drop-shadow-[0_0_80px_rgba(168,85,247,0.4)]"
-          />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-b from-pharma-950/80 via-pharma-950/40 to-pharma-950" />
+          {/* Pen image background — blends with dark bg via mix-blend-mode */}
+          <div className="absolute inset-0 flex items-end justify-center overflow-hidden pointer-events-none" style={{ top: '20%' }}>
+            <img
+              src="/atheryx-pen.jpg"
+              alt=""
+              className="w-[260px] sm:w-[320px] md:w-[380px] object-contain opacity-70"
+              style={{ mixBlendMode: 'lighten', filter: 'drop-shadow(0 0 60px rgba(124,58,237,0.5))' }}
+            />
+          </div>
+          {/* Subtle gradient overlays — top for text, bottom to fade pen */}
+          <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-pharma-950 via-pharma-950/60 to-transparent pointer-events-none" />
+          <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-pharma-950 via-pharma-950/40 to-transparent pointer-events-none" />
 
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32 lg:py-40">
             <div className="text-center max-w-3xl mx-auto">
@@ -67,7 +70,14 @@ export default function HomePage() {
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight">
                 <span className="text-white">Precision Peptide</span>
                 <br />
-                <span className="holographic-shimmer bg-clip-text text-transparent">
+                <span
+                  className="holographic-shimmer font-black"
+                  style={{
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                  }}
+                >
                   Therapy Redefined
                 </span>
               </h1>
