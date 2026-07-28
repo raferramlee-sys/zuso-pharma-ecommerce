@@ -45,21 +45,8 @@ export default function HomePage() {
 
       <div>
         {/* Hero Section */}
-        <section className="relative overflow-hidden">
-          {/* Pen image background — blends with dark bg via mix-blend-mode */}
-          <div className="absolute inset-0 flex items-end justify-center overflow-hidden pointer-events-none" style={{ top: '20%' }}>
-            <img
-              src="/atheryx-pen.jpg"
-              alt=""
-              className="w-[260px] sm:w-[320px] md:w-[380px] object-contain opacity-70"
-              style={{ mixBlendMode: 'lighten', filter: 'drop-shadow(0 0 60px rgba(124,58,237,0.5))' }}
-            />
-          </div>
-          {/* Subtle gradient overlays — top for text, bottom to fade pen */}
-          <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-pharma-950 via-pharma-950/60 to-transparent pointer-events-none" />
-          <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-pharma-950 via-pharma-950/40 to-transparent pointer-events-none" />
-
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32 lg:py-40">
+        <section className="relative">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-28">
             <div className="text-center max-w-3xl mx-auto">
               {/* Badge */}
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-accent-600/30 bg-accent-600/5 mb-8">
@@ -82,7 +69,25 @@ export default function HomePage() {
                 </span>
               </h1>
 
-              <p className="mt-6 text-lg text-pharma-300 max-w-xl mx-auto leading-relaxed">
+              {/* ATHERYX Pen — clean, no frame, no glow */}
+              <div className="mt-10 flex justify-center">
+                <img
+                  src="/atheryx-pen.jpg"
+                  alt="ATHERYX™ Precision Peptide Pen"
+                  className="w-[220px] sm:w-[280px] md:w-[320px] object-contain"
+                />
+              </div>
+
+              {/* Trust badges */}
+              <div className="flex flex-wrap items-center justify-center gap-4 mt-6">
+                {['FDA APPROVED', 'MAL REGULATED', 'STERILE A', 'Rx Only'].map(badge => (
+                  <span key={badge} className="text-[11px] font-semibold tracking-widest text-pharma-400 border border-pharma-700/50 px-3 py-1 rounded">
+                    {badge}
+                  </span>
+                ))}
+              </div>
+
+              <p className="mt-8 text-lg text-pharma-300 max-w-xl mx-auto leading-relaxed">
                 ATHERYX™ Retatrutide and ELYSION™ Tirzepatide — 
                 clinically advanced peptide therapies in precision multi-dose pens. 
                 FDA approved, manufactured in Malaysia.
@@ -101,15 +106,6 @@ export default function HomePage() {
                 >
                   Learn More
                 </Link>
-              </div>
-
-              {/* Trust badges */}
-              <div className="flex flex-wrap items-center justify-center gap-6 mt-12">
-                {['FDA APPROVED', 'MAL REGULATED', 'STERILE A', 'Rx Only'].map(badge => (
-                  <span key={badge} className="text-[11px] font-semibold tracking-widest text-pharma-500 border border-pharma-700/50 px-3 py-1 rounded">
-                    {badge}
-                  </span>
-                ))}
               </div>
             </div>
           </div>
