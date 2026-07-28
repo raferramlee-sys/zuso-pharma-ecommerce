@@ -74,7 +74,7 @@ export default function HomePage() {
                 <img
                   src="/atheryx-pen.png"
                   alt="ATHERYX™ Precision Peptide Pen"
-                  className="w-[220px] sm:w-[280px] md:w-[320px] object-contain"
+                  className="w-[480px] sm:w-[616px] md:w-[704px] object-contain"
                   style={{ mixBlendMode: 'lighten' }}
                 />
               </div>
