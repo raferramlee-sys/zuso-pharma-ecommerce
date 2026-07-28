@@ -70,6 +70,12 @@
               linear-gradient(135deg, #7c3aed, #9575cd, #b39ddb, #7c3aed) border-box;
 }
 
+.atheryx-holographic-border {
+  border: 1px solid transparent;
+  background: linear-gradient(#0d0d2b, #0d0d2b) padding-box,
+              linear-gradient(135deg, #8b0000, #c41e3a, #a52a2a, #8b0000) border-box;
+}
+
 .holographic-shimmer {
   background: linear-gradient(135deg, #7c3aed 0%, #9575cd 25%, #b39ddb 50%, #7c3aed 75%, #9575cd 100%);
   background-size: 400% 400%;
@@ -88,13 +94,14 @@
 /* ─── ATHERYX Product Card Styles ─── */
 
 .atheryx-card {
-  border: 1px solid rgba(124, 58, 237, 0.25);
-  background: linear-gradient(180deg, rgba(124, 58, 237, 0.06) 0%, rgba(13, 13, 43, 0.95) 100%);
+  border: 1px solid transparent;
+  background: linear-gradient(180deg, rgba(139, 0, 0, 0.08) 0%, rgba(13, 13, 43, 0.97) 100%) padding-box,
+              linear-gradient(135deg, #8b0000, #c41e3a, #a52a2a, #8b0000) border-box;
 }
 
 .atheryx-card:hover {
-  border-color: rgba(124, 58, 237, 0.5);
-  background: linear-gradient(180deg, rgba(124, 58, 237, 0.1) 0%, rgba(13, 13, 43, 0.95) 100%);
+  background: linear-gradient(180deg, rgba(139, 0, 0, 0.14) 0%, rgba(13, 13, 43, 0.97) 100%) padding-box,
+              linear-gradient(135deg, #c41e3a, #a52a2a, #8b0000, #c41e3a) border-box;
 }
 
 .atheryx-icon-row {
