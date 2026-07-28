@@ -46,8 +46,15 @@ export default function HomePage() {
       <div>
         {/* Hero Section */}
         <section className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-accent-600/5 via-transparent to-pharma-950" />
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-accent-500/10 rounded-full blur-[120px]" />
+        {/* Background — ATHERYX pen image */}
+        <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+          <img
+            src="/atheryx-pen.jpg"
+            alt=""
+            className="w-[280px] sm:w-[340px] md:w-[400px] object-contain opacity-50 drop-shadow-[0_0_80px_rgba(168,85,247,0.4)]"
+          />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-b from-pharma-950/80 via-pharma-950/40 to-pharma-950" />
 
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32 lg:py-40">
             <div className="text-center max-w-3xl mx-auto">
@@ -64,15 +71,6 @@ export default function HomePage() {
                   Therapy Redefined
                 </span>
               </h1>
-
-              {/* ATHERYX Pen Image */}
-              <div className="mt-8 flex justify-center">
-                <img
-                  src="/atheryx-pen.jpg"
-                  alt="ATHERYX™ Precision Peptide Pen — 0.6ml × 5 doses"
-                  className="w-48 sm:w-56 md:w-64 object-contain drop-shadow-[0_0_40px_rgba(168,85,247,0.3)]"
-                />
-              </div>
 
               <p className="mt-6 text-lg text-pharma-300 max-w-xl mx-auto leading-relaxed">
                 ATHERYX™ Retatrutide and ELYSION™ Tirzepatide — 
