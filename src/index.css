@@ -153,3 +153,66 @@
   color: #8080b8;
   line-height: 1.4;
 }
+
+/* ─── ELYSION Product Card Styles ─── */
+
+.elysion-card {
+  border: 1px solid transparent;
+  background: linear-gradient(180deg, rgba(30, 40, 90, 0.12) 0%, rgba(13, 13, 43, 0.97) 100%) padding-box,
+              linear-gradient(135deg, #1a2456, #2d3a7a, #3a4a8e, #1a2456) border-box;
+}
+
+.elysion-card:hover {
+  background: linear-gradient(180deg, rgba(30, 40, 90, 0.18) 0%, rgba(13, 13, 43, 0.97) 100%) padding-box,
+              linear-gradient(135deg, #2d3a7a, #4a5aa0, #3a4a8e, #2d3a7a) border-box;
+}
+
+.elysion-icon-row {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.elysion-icon-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.elysion-icon-item svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #4a5aa0;
+  opacity: 0.8;
+}
+
+.elysion-icon-item span {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: #8080b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.elysion-feature-box {
+  background: rgba(45, 58, 122, 0.08);
+  border: 1px solid rgba(45, 58, 122, 0.15);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+}
+
+.elysion-feature-box h4 {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #4a5aa0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
+}
+
+.elysion-feature-box p {
+  font-size: 0.65rem;
+  color: #8080b8;
+  line-height: 1.4;
+}
