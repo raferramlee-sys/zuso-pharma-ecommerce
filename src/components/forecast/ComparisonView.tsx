@@ -92,8 +92,11 @@ function WeeklyTable({ rows, brandName }: { rows: ForecastRow[]; brandName: stri
                   <td className="px-3 py-1.5 text-right text-pharma-400">{r.bmi}</td>
                   <td className="px-3 py-1.5">
                     <span className={`px-1.5 py-0.5 rounded-full text-xs ${
+                      r.bmi_classification === 'Underweight' ? 'bg-blue-500/20 text-blue-400' :
                       r.bmi_classification === 'Normal' ? 'bg-green-500/20 text-green-400' :
                       r.bmi_classification === 'Overweight' ? 'bg-yellow-500/20 text-yellow-400' :
+                      r.bmi_classification === 'Obese I' ? 'bg-orange-500/20 text-orange-400' :
+                      r.bmi_classification === 'Obese II' ? 'bg-amber-600/20 text-amber-400' :
                       'bg-red-500/20 text-red-400'
                     }`}>{r.bmi_classification}</span>
                   </td>

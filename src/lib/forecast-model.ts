@@ -90,7 +90,9 @@ function classifyBMI(bmi: number): string {
   if (bmi < 18.5) return 'Underweight'
   if (bmi < 23) return 'Normal'
   if (bmi < 27.5) return 'Overweight'
-  return 'Obese'
+  if (bmi < 32.5) return 'Obese I'
+  if (bmi < 37.5) return 'Obese II'
+  return 'Obese III'
 }
 
 export function calcBiomarkerMultiplier(bio?: BiomarkerInput): number {

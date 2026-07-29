@@ -87,9 +87,11 @@ export default function ForecastForm({ onSubmit, loading }: ForecastFormProps) {
           <span className="font-bold text-white">{bmi.toFixed(1)}</span>
           <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
             bmi < 18.5 ? 'bg-blue-500/20 text-blue-400' : bmi < 23 ? 'bg-green-500/20 text-green-400' :
-            bmi < 27.5 ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'
+            bmi < 27.5 ? 'bg-yellow-500/20 text-yellow-400' : bmi < 32.5 ? 'bg-orange-500/20 text-orange-400' :
+            bmi < 37.5 ? 'bg-amber-600/20 text-amber-400' : 'bg-red-500/20 text-red-400'
           }`}>
-            {bmi < 18.5 ? 'Underweight' : bmi < 23 ? 'Normal' : bmi < 27.5 ? 'Overweight' : 'Obese'}
+            {bmi < 18.5 ? 'Underweight' : bmi < 23 ? 'Normal' : bmi < 27.5 ? 'Overweight' :
+             bmi < 32.5 ? 'Obese I' : bmi < 37.5 ? 'Obese II' : 'Obese III'}
           </span>
         </div>
         <div className="flex items-center gap-2">
