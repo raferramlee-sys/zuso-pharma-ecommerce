@@ -5,12 +5,20 @@ import ForecastForm from '../components/forecast/ForecastForm'
 import ForecastChart from '../components/forecast/ForecastChart'
 import ComparisonView from '../components/forecast/ComparisonView'
 import { calculateForecast } from '../lib/forecast-model'
-import type { PatientInput, ForecastResult } from '../lib/forecast-model'
+import type { PatientInput, ForecastResult, IntensityLevel } from '../lib/forecast-model'
+
+// Intensity → uptitration interval
+const INTENSITY_INTERVALS: Record<IntensityLevel, number> = {
+  mild: 4,
+  moderate: 3,
+  aggressive: 2,
+}
 
 export default function WeightLossForecastPage() {
   const [result, setResult] = useState<ForecastResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [intervalWeeks, setIntervalWeeks] = useState(4)
 
   const handleSubmit = (input: PatientInput) => {
     setLoading(true)
@@ -18,6 +26,7 @@ export default function WeightLossForecastPage() {
     try {
       const r = calculateForecast(input)
       setResult(r)
+      setIntervalWeeks(INTENSITY_INTERVALS[input.intensity])
     } catch (e: any) {
       setError(e.message || 'Calculation error')
     } finally {
@@ -73,18 +82,19 @@ export default function WeightLossForecastPage() {
 
         {result && (
           <div className="space-y-6">
-            <ComparisonView
-              atheryx={result.atheryx}
-              elysion={result.elysion}
-              biomarkerMultiplier={result.biomarker_multiplier}
-              hasBiomarkers={result.has_biomarkers}
-            />
-
             <ForecastChart
               atheryxRows={result.atheryx.rows}
               elysionRows={result.elysion.rows}
               startingWeight={result.atheryx.summary.starting_weight}
               targetWeight={result.target_weight}
+              intervalWeeks={intervalWeeks}
+            />
+
+            <ComparisonView
+              atheryx={result.atheryx}
+              elysion={result.elysion}
+              biomarkerMultiplier={result.biomarker_multiplier}
+              hasBiomarkers={result.has_biomarkers}
             />
 
             <p className="text-xs text-pharma-600 text-center">

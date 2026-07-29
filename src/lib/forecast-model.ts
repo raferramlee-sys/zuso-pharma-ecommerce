@@ -108,12 +108,13 @@ interface IntensityConfig {
   weeklyRateMax: number
   atheryxMaxDose: number
   elysionMaxDose: number
+  titrationIntervalWeeks: number
 }
 
 const INTENSITY_MAP: Record<IntensityLevel, IntensityConfig> = {
-  mild:       { weeklyRateMin: 0.25, weeklyRateMax: 0.35, atheryxMaxDose: 4,  elysionMaxDose: 5 },
-  moderate:   { weeklyRateMin: 0.40, weeklyRateMax: 0.55, atheryxMaxDose: 8,  elysionMaxDose: 10 },
-  aggressive: { weeklyRateMin: 0.60, weeklyRateMax: 0.70, atheryxMaxDose: 12, elysionMaxDose: 15 },
+  mild:       { weeklyRateMin: 0.25, weeklyRateMax: 0.35, atheryxMaxDose: 4,  elysionMaxDose: 5,  titrationIntervalWeeks: 4 },
+  moderate:   { weeklyRateMin: 0.40, weeklyRateMax: 0.55, atheryxMaxDose: 8,  elysionMaxDose: 10, titrationIntervalWeeks: 3 },
+  aggressive: { weeklyRateMin: 0.60, weeklyRateMax: 0.70, atheryxMaxDose: 12, elysionMaxDose: 15, titrationIntervalWeeks: 2 },
 }
 
 // Peptide titration steps: [dose_mg, ...]
@@ -147,6 +148,7 @@ function buildTitration(
   brand: 'atheryx' | 'elysion',
   maxDoseMg: number,
   product: Product,
+  titrationIntervalWeeks: number,
 ): TitrationStep[] {
   const steps = brand === 'atheryx' ? RETATRUTIDE_STEPS : TIRZEPATIDE_STEPS
   // Filter steps up to max dose
@@ -172,7 +174,7 @@ function buildTitration(
       productDosageMg: product.dosage_mg,
       label: `${dose}mg/dose${isLast ? ' (maintenance)' : ''} — ${product.name}`,
     })
-    week += 4
+    week += titrationIntervalWeeks
   }
   return schedule
 }
@@ -190,7 +192,7 @@ function buildBrandPath(
   biomarkerMult: number,
   startDate: Date,
 ): BrandPath {
-  const titration = buildTitration(brand, maxDoseMg, product)
+  const titration = buildTitration(brand, maxDoseMg, product, config.titrationIntervalWeeks)
   const rows: ForecastRow[] = []
   let currentWeight = input.weight_kg
   let week = 1

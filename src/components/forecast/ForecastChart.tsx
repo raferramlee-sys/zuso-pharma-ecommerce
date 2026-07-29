@@ -6,6 +6,7 @@ interface ForecastChartProps {
   elysionRows: ForecastRow[]
   startingWeight: number
   targetWeight: number
+  intervalWeeks: number
 }
 
 type TooltipData = {
@@ -62,7 +63,7 @@ function catmullRomToBezier(
   return d
 }
 
-export default function ForecastChart({ atheryxRows, elysionRows, startingWeight, targetWeight }: ForecastChartProps) {
+export default function ForecastChart({ atheryxRows, elysionRows, startingWeight, targetWeight, intervalWeeks }: ForecastChartProps) {
   const [animPhase, setAnimPhase] = useState(0)
   const [dotProgress, setDotProgress] = useState(0)
   const [selectedPath, setSelectedPath] = useState<'atheryx' | 'elysion'>('atheryx')
@@ -257,7 +258,7 @@ export default function ForecastChart({ atheryxRows, elysionRows, startingWeight
         {/* Legend */}
         <div className="flex items-center justify-center gap-6 mt-3 text-[0.6rem] text-pharma-500">
           <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full" style={{ background: brandColor2 }} /> {selectedPath === 'atheryx' ? 'ATHERYX' : 'ELYSION'} dose every 4 weeks
+            <span className="w-2 h-2 rounded-full" style={{ background: brandColor2 }} /> {selectedPath === 'atheryx' ? 'ATHERYX' : 'ELYSION'} dose every {intervalWeeks} weeks
           </span>
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full" style={{ background: '#22c55e' }} /> Target {targetWeight}kg
