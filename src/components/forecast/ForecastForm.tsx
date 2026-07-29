@@ -8,9 +8,9 @@ interface ForecastFormProps {
 }
 
 const INTENSITY_OPTIONS: { value: IntensityLevel; label: string; desc: string; rate: string; icon: string }[] = [
-  { value: 'mild',       label: 'Mild',       desc: 'Slow & steady — minimal side effects',        rate: '0.25–0.35%', icon: '🐢' },
-  { value: 'moderate',   label: 'Moderate',   desc: 'Balanced — standard clinical ramp',            rate: '0.40–0.55%', icon: '⚡' },
-  { value: 'aggressive', label: 'Aggressive',  desc: 'Maximum speed — full dose titration',          rate: '0.60–0.70%', icon: '🚀' },
+  { value: 'mild',       label: 'Mild',       desc: 'Slow & steady — uptitrate every 6 weeks',      rate: '0.25–0.35%', icon: '🐢' },
+  { value: 'moderate',   label: 'Moderate',   desc: 'Balanced — uptitrate every 4 weeks',            rate: '0.40–0.55%', icon: '⚡' },
+  { value: 'aggressive', label: 'Aggressive',  desc: 'Maximum speed — uptitrate every 2 weeks',       rate: '0.60–0.70%', icon: '🚀' },
 ]
 
 export default function ForecastForm({ onSubmit, loading }: ForecastFormProps) {

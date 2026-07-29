@@ -19,6 +19,8 @@ export interface PatientInput {
   gender: 'male' | 'female'
   intensity: IntensityLevel
   biomarkers?: BiomarkerInput
+  startingDoseAth?: number   // mg — current dose for ATHERYX (skip lower titration steps)
+  startingDoseEly?: number   // mg — current dose for ELYSION
 }
 
 export interface TitrationStep {
@@ -112,8 +114,8 @@ interface IntensityConfig {
 }
 
 const INTENSITY_MAP: Record<IntensityLevel, IntensityConfig> = {
-  mild:       { weeklyRateMin: 0.25, weeklyRateMax: 0.35, atheryxMaxDose: 4,  elysionMaxDose: 5,  titrationIntervalWeeks: 4 },
-  moderate:   { weeklyRateMin: 0.40, weeklyRateMax: 0.55, atheryxMaxDose: 8,  elysionMaxDose: 10, titrationIntervalWeeks: 3 },
+  mild:       { weeklyRateMin: 0.25, weeklyRateMax: 0.35, atheryxMaxDose: 12, elysionMaxDose: 15, titrationIntervalWeeks: 6 },
+  moderate:   { weeklyRateMin: 0.40, weeklyRateMax: 0.55, atheryxMaxDose: 12, elysionMaxDose: 15, titrationIntervalWeeks: 4 },
   aggressive: { weeklyRateMin: 0.60, weeklyRateMax: 0.70, atheryxMaxDose: 12, elysionMaxDose: 15, titrationIntervalWeeks: 2 },
 }
 
@@ -149,10 +151,15 @@ function buildTitration(
   maxDoseMg: number,
   product: Product,
   titrationIntervalWeeks: number,
+  startingDoseMg?: number,
 ): TitrationStep[] {
   const steps = brand === 'atheryx' ? RETATRUTIDE_STEPS : TIRZEPATIDE_STEPS
-  // Filter steps up to max dose
-  const active = steps.filter(d => d <= maxDoseMg)
+  // Filter steps up to max dose, starting from the selected starting dose
+  const startIdx = startingDoseMg
+    ? steps.findIndex(d => d >= startingDoseMg)
+    : 0
+  const effectiveStart = startIdx >= 0 ? steps[Math.max(0, startIdx)] : steps[0]
+  const active = steps.filter(d => d <= maxDoseMg && d >= effectiveStart)
   if (active.length === 0) {
     return [{
       startWeek: 1, endWeek: 999,
@@ -168,7 +175,7 @@ function buildTitration(
     const isLast = i === active.length - 1
     schedule.push({
       startWeek: week,
-      endWeek: isLast ? 999 : week + 3,
+      endWeek: isLast ? 999 : week + titrationIntervalWeeks - 1,
       dose_mg: dose,
       productSku: product.slug,
       productDosageMg: product.dosage_mg,
@@ -192,8 +199,9 @@ function buildBrandPath(
   biomarkerMult: number,
   startDate: Date,
   titrationIntervalWeeks: number,
+  startingDoseMg?: number,
 ): BrandPath {
-  const titration = buildTitration(brand, maxDoseMg, product, titrationIntervalWeeks)
+  const titration = buildTitration(brand, maxDoseMg, product, titrationIntervalWeeks, startingDoseMg)
   const rows: ForecastRow[] = []
   let currentWeight = input.weight_kg
   let week = 1
@@ -282,12 +290,14 @@ export function calculateForecast(input: PatientInput): ForecastResult {
 
   const atheryx = buildBrandPath(
     'atheryx', 'ATHERYX™', athProduct.peptide,
-    config.atheryxMaxDose, athProduct, input, targetWeight, biomarkerMult, startDate, config.titrationIntervalWeeks,
+    config.atheryxMaxDose, athProduct, input, targetWeight, biomarkerMult, startDate,
+    config.titrationIntervalWeeks, input.startingDoseAth,
   )
 
   const elysion = buildBrandPath(
     'elysion', 'ELYSION™', elyProduct.peptide,
-    config.elysionMaxDose, elyProduct, input, targetWeight, biomarkerMult, startDate, config.titrationIntervalWeeks,
+    config.elysionMaxDose, elyProduct, input, targetWeight, biomarkerMult, startDate,
+    config.titrationIntervalWeeks, input.startingDoseEly,
   )
 
   return {

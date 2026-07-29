@@ -6,7 +6,14 @@ interface ComparisonViewProps {
   elysion: BrandPath
   biomarkerMultiplier: number
   hasBiomarkers: boolean
+  startingDoseAth?: number
+  startingDoseEly?: number
+  onStartingDoseAthChange: (dose: number | undefined) => void
+  onStartingDoseElyChange: (dose: number | undefined) => void
 }
+
+const ATH_DOSES = [2, 4, 6, 8, 12]
+const ELY_DOSES = [2.5, 5, 7.5, 10, 12.5, 15]
 
 function MiniSummary({ path, colorClass, bgClass }: { path: BrandPath; colorClass: string; bgClass: string }) {
   const s = path.summary
@@ -107,7 +114,7 @@ function WeeklyTable({ rows, brandName }: { rows: ForecastRow[]; brandName: stri
   )
 }
 
-export default function ComparisonView({ atheryx, elysion, biomarkerMultiplier, hasBiomarkers }: ComparisonViewProps) {
+export default function ComparisonView({ atheryx, elysion, biomarkerMultiplier, hasBiomarkers, startingDoseAth, startingDoseEly, onStartingDoseAthChange, onStartingDoseElyChange }: ComparisonViewProps) {
   return (
     <div className="space-y-6">
       {/* Side-by-side summaries */}
@@ -116,8 +123,40 @@ export default function ComparisonView({ atheryx, elysion, biomarkerMultiplier, 
           <span>🎯</span> Your Weight Loss Dashboard — ATHERYX™ vs ELYSION™
         </h3>
         <div className="flex flex-col sm:flex-row gap-4">
-          <MiniSummary path={atheryx} colorClass="text-purple-400" bgClass="bg-purple-500/5 border border-purple-500/20" />
-          <MiniSummary path={elysion} colorClass="text-blue-400" bgClass="bg-blue-500/5 border border-blue-500/20" />
+          <div className="flex-1 flex flex-col gap-2">
+            {/* Starting dose selector */}
+            <div className="flex items-center gap-2 px-1">
+              <label className="text-[0.6rem] text-pharma-500 uppercase tracking-wider whitespace-nowrap">Start dose:</label>
+              <select
+                value={startingDoseAth ?? ''}
+                onChange={e => onStartingDoseAthChange(e.target.value ? Number(e.target.value) : undefined)}
+                className="bg-pharma-800 border border-pharma-600 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-purple-500"
+              >
+                <option value="">New patient (2mg)</option>
+                {ATH_DOSES.filter(d => d > 2).map(d => (
+                  <option key={d} value={d}>{d}mg</option>
+                ))}
+              </select>
+            </div>
+            <MiniSummary path={atheryx} colorClass="text-purple-400" bgClass="bg-purple-500/5 border border-purple-500/20" />
+          </div>
+          <div className="flex-1 flex flex-col gap-2">
+            {/* Starting dose selector */}
+            <div className="flex items-center gap-2 px-1">
+              <label className="text-[0.6rem] text-pharma-500 uppercase tracking-wider whitespace-nowrap">Start dose:</label>
+              <select
+                value={startingDoseEly ?? ''}
+                onChange={e => onStartingDoseElyChange(e.target.value ? Number(e.target.value) : undefined)}
+                className="bg-pharma-800 border border-pharma-600 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500"
+              >
+                <option value="">New patient (2.5mg)</option>
+                {ELY_DOSES.filter(d => d > 2.5).map(d => (
+                  <option key={d} value={d}>{d}mg</option>
+                ))}
+              </select>
+            </div>
+            <MiniSummary path={elysion} colorClass="text-blue-400" bgClass="bg-blue-500/5 border border-blue-500/20" />
+          </div>
         </div>
         {hasBiomarkers && (
           <p className="text-xs text-pharma-500 mt-2">

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Link } from 'react-router-dom'
 import ForecastForm from '../components/forecast/ForecastForm'
@@ -9,8 +9,8 @@ import type { PatientInput, ForecastResult, IntensityLevel } from '../lib/foreca
 
 // Intensity → uptitration interval
 const INTENSITY_INTERVALS: Record<IntensityLevel, number> = {
-  mild: 4,
-  moderate: 3,
+  mild: 6,
+  moderate: 4,
   aggressive: 2,
 }
 
@@ -19,20 +19,43 @@ export default function WeightLossForecastPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [intervalWeeks, setIntervalWeeks] = useState(4)
+  const [startingDoseAth, setStartingDoseAth] = useState<number | undefined>()
+  const [startingDoseEly, setStartingDoseEly] = useState<number | undefined>()
+  const lastInputRef = useRef<PatientInput | null>(null)
 
-  const handleSubmit = (input: PatientInput) => {
-    setLoading(true)
-    setError('')
+  const recalc = useCallback((input: PatientInput, doseAth?: number, doseEly?: number) => {
     try {
-      const r = calculateForecast(input)
+      const r = calculateForecast({
+        ...input,
+        startingDoseAth: doseAth,
+        startingDoseEly: doseEly,
+      })
       setResult(r)
       setIntervalWeeks(INTENSITY_INTERVALS[input.intensity])
     } catch (e: any) {
       setError(e.message || 'Calculation error')
-    } finally {
-      setLoading(false)
     }
+  }, [])
+
+  const handleSubmit = (input: PatientInput) => {
+    setLoading(true)
+    setError('')
+    lastInputRef.current = input
+    setStartingDoseAth(undefined)
+    setStartingDoseEly(undefined)
+    recalc(input)
+    setLoading(false)
   }
+
+  const handleStartingDoseAthChange = useCallback((dose: number | undefined) => {
+    setStartingDoseAth(dose)
+    if (lastInputRef.current) recalc(lastInputRef.current, dose, startingDoseEly)
+  }, [recalc, startingDoseEly])
+
+  const handleStartingDoseElyChange = useCallback((dose: number | undefined) => {
+    setStartingDoseEly(dose)
+    if (lastInputRef.current) recalc(lastInputRef.current, startingDoseAth, dose)
+  }, [recalc, startingDoseAth])
 
   return (
     <>
@@ -95,6 +118,10 @@ export default function WeightLossForecastPage() {
               elysion={result.elysion}
               biomarkerMultiplier={result.biomarker_multiplier}
               hasBiomarkers={result.has_biomarkers}
+              startingDoseAth={startingDoseAth}
+              startingDoseEly={startingDoseEly}
+              onStartingDoseAthChange={handleStartingDoseAthChange}
+              onStartingDoseElyChange={handleStartingDoseElyChange}
             />
 
             <p className="text-xs text-pharma-600 text-center">
