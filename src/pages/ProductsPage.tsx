@@ -1,5 +1,5 @@
 import { Helmet } from 'react-helmet-async'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, Link } from 'react-router-dom'
 import ProductCard from '../components/product/ProductCard'
 import { products } from '../lib/products'
 
@@ -74,6 +74,19 @@ export default function ProductsPage() {
             <p className="text-pharma-400">No products found.</p>
           </div>
         )}
+
+        {/* Forecast CTA */}
+        <div className="mt-10 text-center">
+          <Link
+            to="/forecast"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-btn bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold text-sm hover:from-purple-500 hover:to-blue-500 transition-all shadow-lg shadow-purple-600/20"
+          >
+            📊 Forecast Your BMI
+          </Link>
+          <p className="mt-2 text-xs text-pharma-400">
+            See how ATHERYX™ vs ELYSION™ compares for your weight loss journey
+          </p>
+        </div>
       </div>
     </>
   )

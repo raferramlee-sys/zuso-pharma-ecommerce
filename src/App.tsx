@@ -6,6 +6,7 @@ import ProductDetailPage from './pages/ProductDetailPage'
 import CartPage from './pages/CartPage'
 import CheckoutSuccess from './pages/CheckoutSuccess'
 import CheckoutCancel from './pages/CheckoutCancel'
+import WeightLossForecastPage from './pages/WeightLossForecastPage'
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
         <Route path="/checkout/success" element={<CheckoutSuccess />} />
         <Route path="/checkout/cancel" element={<CheckoutCancel />} />
       </Route>
+      <Route path="/forecast" element={<WeightLossForecastPage />} />
     </Routes>
   )
 }
