@@ -191,8 +191,9 @@ function buildBrandPath(
   targetWeight: number,
   biomarkerMult: number,
   startDate: Date,
+  titrationIntervalWeeks: number,
 ): BrandPath {
-  const titration = buildTitration(brand, maxDoseMg, product, config.titrationIntervalWeeks)
+  const titration = buildTitration(brand, maxDoseMg, product, titrationIntervalWeeks)
   const rows: ForecastRow[] = []
   let currentWeight = input.weight_kg
   let week = 1
@@ -281,12 +282,12 @@ export function calculateForecast(input: PatientInput): ForecastResult {
 
   const atheryx = buildBrandPath(
     'atheryx', 'ATHERYX™', athProduct.peptide,
-    config.atheryxMaxDose, athProduct, input, targetWeight, biomarkerMult, startDate,
+    config.atheryxMaxDose, athProduct, input, targetWeight, biomarkerMult, startDate, config.titrationIntervalWeeks,
   )
 
   const elysion = buildBrandPath(
     'elysion', 'ELYSION™', elyProduct.peptide,
-    config.elysionMaxDose, elyProduct, input, targetWeight, biomarkerMult, startDate,
+    config.elysionMaxDose, elyProduct, input, targetWeight, biomarkerMult, startDate, config.titrationIntervalWeeks,
   )
 
   return {
