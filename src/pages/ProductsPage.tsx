@@ -1,5 +1,5 @@
 import { Helmet } from 'react-helmet-async'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, Link } from 'react-router-dom'
 import ProductCard from '../components/product/ProductCard'
 import { products } from '../lib/products'
 
@@ -86,6 +86,16 @@ export default function ProductsPage() {
             <a href="/products?brand=elysion" className="px-4 py-2 text-sm font-medium rounded-btn border border-pharma-600 text-pharma-300 hover:text-white hover:border-pharma-400 transition-colors">ELYSION™</a>
           </div>
         )}
+
+        {/* Forecast CTA */}
+        <div className="mb-8">
+          <Link to="/forecast" className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-gradient-to-r from-purple-600/30 to-accent-500/20 border border-purple-500/30 hover:border-purple-400 text-sm text-white font-medium transition-all group">
+            <span className="text-lg">📊</span>
+            <span>Forecast Your BMI</span>
+            <span className="text-pharma-400 group-hover:text-white transition-colors">→</span>
+          </Link>
+          <p className="text-xs text-pharma-500 mt-1.5">Calculate your personalized weight loss timeline with our clinical data-driven calculator</p>
+        </div>
 
         {/* Product grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
