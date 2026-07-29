@@ -1,178 +1,168 @@
-import { useState } from 'react';
-import type { ForecastInput, Biomarkers, IntensityOption } from '../../lib/forecast-model';
-import { calculateTargetWeight, classifyBMI, INTENSITY_OPTIONS } from '../../lib/forecast-model';
+import { useMemo, useState } from 'react'
+import { autoTargetWeight } from '../../lib/forecast-model'
+import type { BiomarkerInput, PatientInput, IntensityLevel } from '../../lib/forecast-model'
 
-interface Props {
-  onSubmit: (input: ForecastInput) => void;
-  loading: boolean;
+interface ForecastFormProps {
+  onSubmit: (input: PatientInput) => void
+  loading: boolean
 }
 
-export default function ForecastForm({ onSubmit, loading }: Props) {
-  const [height, setHeight] = useState(165);
-  const [weight, setWeight] = useState(85);
-  const [age, setAge] = useState(35);
-  const [gender, setGender] = useState<'Female' | 'Male'>('Female');
-  const [intensity, setIntensity] = useState<string>('moderate');
-  const [showBiomarkers, setShowBiomarkers] = useState(false);
-  const [biomarkers, setBiomarkers] = useState<Biomarkers>({});
+const INTENSITY_OPTIONS: { value: IntensityLevel; label: string; desc: string; rate: string; icon: string }[] = [
+  { value: 'mild',       label: 'Mild',       desc: 'Slow & steady — minimal side effects',        rate: '0.25–0.35%', icon: '🐢' },
+  { value: 'moderate',   label: 'Moderate',   desc: 'Balanced — standard clinical ramp',            rate: '0.40–0.55%', icon: '⚡' },
+  { value: 'aggressive', label: 'Aggressive',  desc: 'Maximum speed — full dose titration',          rate: '0.60–0.70%', icon: '🚀' },
+]
 
-  const heightM = height / 100;
-  const bmi = weight / (heightM * heightM);
-  const targetWeight = calculateTargetWeight(height);
-  const bmiClass = classifyBMI(bmi);
-  const toLose = Math.max(0, weight - targetWeight);
+export default function ForecastForm({ onSubmit, loading }: ForecastFormProps) {
+  const defaultHeight = 165
+  const defaultWeight = 85
+
+  const [height, setHeight] = useState(defaultHeight)
+  const [weight, setWeight] = useState(defaultWeight)
+  const [age, setAge] = useState(35)
+  const [gender, setGender] = useState<'male' | 'female'>('female')
+  const [intensity, setIntensity] = useState<IntensityLevel>('moderate')
+  const [showBiomarkers, setShowBiomarkers] = useState(false)
+  const [insulin, setInsulin] = useState('')
+  const [hsCRP, setHsCRP] = useState('')
+  const [vitaminD, setVitaminD] = useState('')
+  const [homocysteine, setHomocysteine] = useState('')
+
+  const targetWeight = useMemo(() => autoTargetWeight(height), [height])
+  const bmi = weight / ((height / 100) * (height / 100))
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
+    const biomarkers: BiomarkerInput = {}
+    if (insulin) biomarkers.morningSerumInsulin = parseFloat(insulin)
+    if (hsCRP) biomarkers.hsCRP = parseFloat(hsCRP)
+    if (vitaminD) biomarkers.vitaminD = parseFloat(vitaminD)
+    if (homocysteine) biomarkers.homocysteine = parseFloat(homocysteine)
+
     onSubmit({
       height_cm: height,
       weight_kg: weight,
       age,
       gender,
-      intensity: intensity as ForecastInput['intensity'],
-      biomarkers: showBiomarkers && Object.keys(biomarkers).length > 0 ? biomarkers : undefined,
-    });
-  };
-
-  const updateBiomarker = (key: keyof Biomarkers, value: string) => {
-    const num = parseFloat(value);
-    if (isNaN(num) || num < 0) {
-      const next = { ...biomarkers };
-      delete next[key];
-      setBiomarkers(next);
-    } else {
-      setBiomarkers({ ...biomarkers, [key]: num });
-    }
-  };
+      intensity,
+      biomarkers: Object.keys(biomarkers).length > 0 ? biomarkers : undefined,
+    })
+  }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Basic inputs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
-          <label className="block text-[0.7rem] text-gray-400 mb-1">Height (cm)</label>
-          <input
-            type="number"
-            value={height}
-            onChange={(e) => setHeight(Number(e.target.value))}
-            min={130} max={220}
-            className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:border-purple-500 focus:outline-none"
-          />
+          <label className="block text-sm font-medium text-pharma-300 mb-1">Height (cm)</label>
+          <input type="number" value={height} onChange={e => setHeight(Number(e.target.value))}
+            className="w-full bg-pharma-800 border border-pharma-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-500"
+            min={140} max={220} step={0.1} />
         </div>
         <div>
-          <label className="block text-[0.7rem] text-gray-400 mb-1">Weight (kg)</label>
-          <input
-            type="number"
-            value={weight}
-            onChange={(e) => setWeight(Number(e.target.value))}
-            min={30} max={250}
-            className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:border-purple-500 focus:outline-none"
-          />
+          <label className="block text-sm font-medium text-pharma-300 mb-1">Weight (kg)</label>
+          <input type="number" value={weight} onChange={e => setWeight(Number(e.target.value))}
+            className="w-full bg-pharma-800 border border-pharma-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-500"
+            min={40} max={250} step={0.1} />
         </div>
         <div>
-          <label className="block text-[0.7rem] text-gray-400 mb-1">Age</label>
-          <input
-            type="number"
-            value={age}
-            onChange={(e) => setAge(Number(e.target.value))}
-            min={18} max={100}
-            className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:border-purple-500 focus:outline-none"
-          />
+          <label className="block text-sm font-medium text-pharma-300 mb-1">Age</label>
+          <input type="number" value={age} onChange={e => setAge(Number(e.target.value))}
+            className="w-full bg-pharma-800 border border-pharma-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-500"
+            min={18} max={100} />
         </div>
         <div>
-          <label className="block text-[0.7rem] text-gray-400 mb-1">Gender</label>
-          <select
-            value={gender}
-            onChange={(e) => setGender(e.target.value as 'Female' | 'Male')}
-            className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:border-purple-500 focus:outline-none"
-          >
-            <option>Female</option>
-            <option>Male</option>
+          <label className="block text-sm font-medium text-pharma-300 mb-1">Gender</label>
+          <select value={gender} onChange={e => setGender(e.target.value as 'male' | 'female')}
+            className="w-full bg-pharma-800 border border-pharma-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-500">
+            <option value="female">Female</option>
+            <option value="male">Male</option>
           </select>
         </div>
       </div>
 
-      {/* BMI display */}
-      <div className="flex items-center gap-4 text-sm">
-        <span className="text-gray-500">BMI: <strong className="text-white">{bmi.toFixed(1)}</strong></span>
-        <span className={`px-2 py-0.5 rounded-full text-[0.65rem] font-medium ${
-          bmiClass === 'Obese' ? 'bg-red-900/40 text-red-400' :
-          bmiClass === 'Overweight' ? 'bg-amber-900/40 text-amber-400' :
-          'bg-green-900/40 text-green-400'
-        }`}>{bmiClass}</span>
-        <span className="text-gray-500">Target: <strong className="text-green-400">{targetWeight}</strong> kg</span>
-        <span className="text-gray-500">(BMI 22.5)</span>
-        {toLose > 0 && (
-          <span className="text-gray-500">To lose: <strong className="text-purple-400">{toLose.toFixed(1)}</strong> kg</span>
-        )}
+      {/* BMI + target row */}
+      <div className="flex flex-wrap items-center gap-4 text-sm">
+        <div className="flex items-center gap-2">
+          <span className="text-pharma-400">BMI:</span>
+          <span className="font-bold text-white">{bmi.toFixed(1)}</span>
+          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+            bmi < 18.5 ? 'bg-blue-500/20 text-blue-400' : bmi < 23 ? 'bg-green-500/20 text-green-400' :
+            bmi < 27.5 ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'
+          }`}>
+            {bmi < 18.5 ? 'Underweight' : bmi < 23 ? 'Normal' : bmi < 27.5 ? 'Overweight' : 'Obese'}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-pharma-400">Target:</span>
+          <span className="font-bold text-green-400">{targetWeight} kg</span>
+          <span className="text-pharma-500 text-xs">(BMI 22.5)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-pharma-400">To lose:</span>
+          <span className="font-bold text-accent-400">{Math.max(0, Math.round((weight - targetWeight) * 10) / 10)} kg</span>
+        </div>
       </div>
 
-      {/* Intensity selection */}
+      {/* Intensity selector */}
       <div>
-        <label className="block text-[0.7rem] text-gray-400 mb-2">Weight Loss Intensity</label>
-        <div className="grid grid-cols-3 gap-2">
-          {INTENSITY_OPTIONS.map((opt: IntensityOption) => (
+        <label className="block text-sm font-medium text-pharma-300 mb-3">
+          Weight Loss Intensity
+          <span className="text-pharma-500 text-xs ml-1">(the calculator recommends the best product for you)</span>
+        </label>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {INTENSITY_OPTIONS.map(opt => (
             <button
               key={opt.value}
               type="button"
               onClick={() => setIntensity(opt.value)}
-              className={`p-3 rounded-lg border text-left transition-all ${
+              className={`p-4 rounded-xl border text-left transition-all ${
                 intensity === opt.value
-                  ? 'border-purple-500/50 bg-purple-600/10'
-                  : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
+                  ? 'border-accent-500 bg-accent-500/10 shadow-lg shadow-accent-500/10'
+                  : 'border-pharma-700 bg-pharma-800/50 hover:border-pharma-600'
               }`}
             >
-              <div className="text-lg mb-1">{opt.icon}</div>
-              <div className="text-sm font-semibold text-white">{opt.label}</div>
-              <div className="text-[0.6rem] text-gray-500 mt-0.5">{opt.desc}</div>
-              <div className="text-[0.65rem] text-gray-400 mt-1">~{opt.rate} / week</div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xl">{opt.icon}</span>
+                <span className={`font-bold text-sm ${intensity === opt.value ? 'text-accent-400' : 'text-white'}`}>{opt.label}</span>
+              </div>
+              <div className="text-xs text-pharma-400 mb-1">{opt.desc}</div>
+              <div className={`text-xs font-mono ${intensity === opt.value ? 'text-accent-300' : 'text-pharma-500'}`}>
+                ~{opt.rate} / week
+              </div>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Biomarkers toggle */}
+      {/* Biomarker toggle */}
       <div>
-        <button
-          type="button"
-          onClick={() => setShowBiomarkers(!showBiomarkers)}
-          className="text-[0.7rem] text-gray-500 hover:text-gray-300 flex items-center gap-1"
-        >
-          {showBiomarkers ? '▾' : '▸'} Optional: Biomarker Adjustments (insulin, HsCRP, Vit D, Homocysteine)
+        <button type="button" onClick={() => setShowBiomarkers(!showBiomarkers)}
+          className="text-sm text-accent-400 hover:text-accent-300 flex items-center gap-1">
+          <span>{showBiomarkers ? '▾' : '▸'} Optional: Biomarker Adjustments</span>
+          <span className="text-pharma-500 text-xs">(insulin, HsCRP, Vit D, Homocysteine)</span>
         </button>
         {showBiomarkers && (
-          <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3 bg-gray-800/30 rounded-lg p-3">
-            {([
-              { key: 'morningSerumInsulin', label: 'Insulin (µIU/mL)', hint: '>25 = faster loss' },
-              { key: 'hsCRP', label: 'HsCRP (mg/L)', hint: '>3 = slower loss' },
-              { key: 'vitaminD', label: 'Vitamin D (ng/mL)', hint: '<30 = slower loss' },
-              { key: 'homocysteine', label: 'Homocysteine (µmol/L)', hint: '>15 = slower loss' },
-            ] as const).map(({ key, label, hint }) => (
-              <div key={key}>
-                <label className="block text-[0.6rem] text-gray-500 mb-1">{label}</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={biomarkers[key] ?? ''}
-                  onChange={(e) => updateBiomarker(key, e.target.value)}
-                  className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-white"
-                  placeholder="—"
-                />
-                <p className="text-[0.55rem] text-gray-600 mt-0.5">{hint}</p>
-              </div>
-            ))}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3 p-4 rounded-lg border border-pharma-700 bg-pharma-800/50">
+            <div><label className="block text-xs text-pharma-400 mb-1">Morning Insulin (µIU/mL)</label>
+              <input type="number" value={insulin} onChange={e => setInsulin(e.target.value)} placeholder="5-25"
+                className="w-full bg-pharma-900 border border-pharma-600 rounded px-2 py-1.5 text-white text-xs focus:outline-none focus:border-accent-500" /></div>
+            <div><label className="block text-xs text-pharma-400 mb-1">HsCRP (mg/L)</label>
+              <input type="number" value={hsCRP} onChange={e => setHsCRP(e.target.value)} placeholder="<3"
+                className="w-full bg-pharma-900 border border-pharma-600 rounded px-2 py-1.5 text-white text-xs focus:outline-none focus:border-accent-500" /></div>
+            <div><label className="block text-xs text-pharma-400 mb-1">Vitamin D (ng/mL)</label>
+              <input type="number" value={vitaminD} onChange={e => setVitaminD(e.target.value)} placeholder="30-100"
+                className="w-full bg-pharma-900 border border-pharma-600 rounded px-2 py-1.5 text-white text-xs focus:outline-none focus:border-accent-500" /></div>
+            <div><label className="block text-xs text-pharma-400 mb-1">Homocysteine (µmol/L)</label>
+              <input type="number" value={homocysteine} onChange={e => setHomocysteine(e.target.value)} placeholder="<15"
+                className="w-full bg-pharma-900 border border-pharma-600 rounded px-2 py-1.5 text-white text-xs focus:outline-none focus:border-accent-500" /></div>
           </div>
         )}
       </div>
 
-      {/* Submit */}
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg hover:from-purple-500 hover:to-blue-500 disabled:opacity-50 transition-all text-sm"
-      >
+      <button type="submit" disabled={loading}
+        className="w-full py-3 rounded-lg bg-gradient-to-r from-accent-500 to-purple-600 text-white font-semibold text-sm hover:opacity-90 disabled:opacity-50 transition-all">
         {loading ? 'Calculating...' : 'Compare ATHERYX™ vs ELYSION™'}
       </button>
     </form>
-  );
+  )
 }

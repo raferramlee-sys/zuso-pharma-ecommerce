@@ -6,7 +6,7 @@ import { products } from '../lib/products'
 export default function ProductsPage() {
   const [searchParams] = useSearchParams()
   const brandFilter = searchParams.get('brand')
-  const canonicalUrl = typeof window !== 'undefined' ? window.location.origin + window.location.pathname : 'https://zuso-pharma-ecommerce.vercel.app/products'
+  const canonicalUrl = 'https://pharma.zuso-boltz-agentic.app/products'
 
   const filtered = brandFilter
     ? products.filter(p => p.brand === brandFilter)
@@ -31,6 +31,31 @@ export default function ProductsPage() {
         <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={pageDesc} />
         <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:image" content="https://pharma.zuso-boltz-agentic.app/og-image.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@zusopharma" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDesc} />
+        <meta name="twitter:image" content="https://pharma.zuso-boltz-agentic.app/og-image.png" />
+        <meta property="og:locale" content="en_MY" />
+        <link rel="alternate" hreflang="en-MY" href={canonicalUrl} />
+        <link rel="alternate" hreflang="x-default" href={canonicalUrl} />
+        <script type="application/ld+json">{JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          itemListElement: products.map((p, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            item: {
+              '@type': 'Product',
+              name: `${p.brand === 'atheryx' ? 'ATHERYX™' : 'ELYSION™'} ${p.peptide} ${p.dosage_mg}mg`,
+              url: `https://pharma.zuso-boltz-agentic.app/product/${p.slug}`,
+            },
+          })),
+        })}</script>
       </Helmet>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -62,6 +87,16 @@ export default function ProductsPage() {
           </div>
         )}
 
+        {/* Forecast CTA */}
+        <div className="mb-8">
+          <Link to="/forecast" className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-gradient-to-r from-purple-600/30 to-accent-500/20 border border-purple-500/30 hover:border-purple-400 text-sm text-white font-medium transition-all group">
+            <span className="text-lg">📊</span>
+            <span>Forecast Your BMI</span>
+            <span className="text-pharma-400 group-hover:text-white transition-colors">→</span>
+          </Link>
+          <p className="text-xs text-pharma-500 mt-1.5">Calculate your personalized weight loss timeline with our clinical data-driven calculator</p>
+        </div>
+
         {/* Product grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {filtered.map(product => (
@@ -74,19 +109,6 @@ export default function ProductsPage() {
             <p className="text-pharma-400">No products found.</p>
           </div>
         )}
-
-        {/* Forecast CTA */}
-        <div className="mt-10 text-center">
-          <Link
-            to="/forecast"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-btn bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold text-sm hover:from-purple-500 hover:to-blue-500 transition-all shadow-lg shadow-purple-600/20"
-          >
-            📊 Forecast Your BMI
-          </Link>
-          <p className="mt-2 text-xs text-pharma-400">
-            See how ATHERYX™ vs ELYSION™ compares for your weight loss journey
-          </p>
-        </div>
       </div>
     </>
   )

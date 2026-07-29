@@ -1,95 +1,99 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
-import ForecastForm from '../components/forecast/ForecastForm';
-import ForecastChart from '../components/forecast/ForecastChart';
-import ForecastTable from '../components/forecast/ForecastTable';
-import ForecastSummary from '../components/forecast/ForecastSummary';
-import { compareForecast, type ForecastInput, type ComparisonResult } from '../lib/forecast-model';
-import { products } from '../lib/products';
+import { useState } from 'react'
+import { Helmet } from 'react-helmet-async'
+import { Link } from 'react-router-dom'
+import ForecastForm from '../components/forecast/ForecastForm'
+import ForecastChart from '../components/forecast/ForecastChart'
+import ComparisonView from '../components/forecast/ComparisonView'
+import { calculateForecast } from '../lib/forecast-model'
+import type { PatientInput, ForecastResult } from '../lib/forecast-model'
 
 export default function WeightLossForecastPage() {
-  const [comparison, setComparison] = useState<ComparisonResult | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [activeChart, setActiveChart] = useState<'atheryx' | 'elysion'>('atheryx');
+  const [result, setResult] = useState<ForecastResult | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleSubmit = (input: ForecastInput) => {
-    setLoading(true);
-    // Small delay for UX
-    setTimeout(() => {
-      try {
-        const result = compareForecast(input, products);
-        setComparison(result);
-        setActiveChart('atheryx');
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }, 300);
-  };
+  const handleSubmit = (input: PatientInput) => {
+    setLoading(true)
+    setError('')
+    try {
+      const r = calculateForecast(input)
+      setResult(r)
+    } catch (e: any) {
+      setError(e.message || 'Calculation error')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <>
       <Helmet>
         <title>Weight Loss Forecast Calculator — Zuso Pharma</title>
-        <meta name="description" content="Compare ATHERYX™ Retatrutide vs ELYSION™ Tirzepatide. Personalized weight loss forecast with dose titration, BMI tracking, and biomarker adjustments." />
-        <meta property="og:title" content="Weight Loss Forecast Calculator — Zuso Pharma" />
-        <meta property="og:description" content="Compare ATHERYX™ Retatrutide vs ELYSION™ Tirzepatide. Personalized weight loss forecast." />
-        <meta name="twitter:title" content="Weight Loss Forecast Calculator — Zuso Pharma" />
-        <meta name="twitter:description" content="Compare ATHERYX™ Retatrutide vs ELYSION™ Tirzepatide. Personalized weight loss forecast." />
+        <meta name="description" content="Compare ATHERYX™ Retatrutide vs ELYSION™ Tirzepatide weight loss timeline. Select intensity — the calculator recommends the best product and dose titration for you." />
         <link rel="canonical" href="https://pharma.zuso-boltz-agentic.app/forecast" />
+        <meta property="og:title" content="Weight Loss Forecast Calculator | Zuso Pharma" />
+        <meta property="og:description" content="Compare ATHERYX™ vs ELYSION™ weight loss timeline with personalized dose titration." />
+        <meta property="og:url" content="https://pharma.zuso-boltz-agentic.app/forecast" />
+        <meta property="og:image" content="https://pharma.zuso-boltz-agentic.app/og-image.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:type" content="website" />
+        <meta property="og:locale" content="en_MY" />
         <link rel="alternate" hrefLang="en-MY" href="https://pharma.zuso-boltz-agentic.app/forecast" />
         <link rel="alternate" hrefLang="x-default" href="https://pharma.zuso-boltz-agentic.app/forecast" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@zusopharma" />
+        <meta name="twitter:title" content="Weight Loss Forecast Calculator | Zuso Pharma" />
+        <meta name="twitter:description" content="Compare ATHERYX™ vs ELYSION™ weight loss timeline with personalized dose titration." />
+        <meta name="twitter:image" content="https://pharma.zuso-boltz-agentic.app/og-image.png" />
       </Helmet>
 
-      <div className="min-h-screen bg-gray-950 pt-24 pb-16">
-        <div className="max-w-5xl mx-auto px-4">
-          <Link to="/products" className="text-sm text-gray-500 hover:text-gray-300 mb-4 inline-block">
-            ← Back to Products
-          </Link>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <Link to="/products" className="text-sm text-pharma-400 hover:text-white mb-6 inline-block">
+          ← Back to Products
+        </Link>
 
-          <h1 className="text-3xl font-bold text-white mb-2">Weight Loss Forecast Calculator</h1>
-          <p className="text-gray-400 text-sm mb-8 max-w-2xl">
-            Select your weight loss intensity. We compare ATHERYX™ Retatrutide vs ELYSION™ Tirzepatide —
-            recommending the best product, dose titration, and projected timeline for each.
+        <div className="text-center mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+            Weight Loss Forecast <span className="text-accent-400">Calculator</span>
+          </h1>
+          <p className="text-pharma-400 text-sm max-w-xl mx-auto">
+            Select your weight loss intensity. We compare ATHERYX™ Retatrutide vs ELYSION™ Tirzepatide
+            — recommending the best product, dose titration, and projected timeline for each.
           </p>
-
-          <div className="space-y-8">
-            <ForecastForm onSubmit={handleSubmit} loading={loading} />
-
-            {comparison && (
-              <>
-                {/* Chart */}
-                <ForecastChart
-                  atheryxRows={comparison.atheryx.rows}
-                  elysionRows={comparison.elysion.rows}
-                  targetWeight={comparison.target_weight}
-                  activeBrand={activeChart}
-                  onToggle={setActiveChart}
-                />
-
-                {/* Summary */}
-                <ForecastSummary comparison={comparison} />
-
-                {/* Side-by-side tables */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <ForecastTable
-                    result={comparison.atheryx}
-                    color="text-purple-400"
-                    borderColor="border-purple-500/30"
-                  />
-                  <ForecastTable
-                    result={comparison.elysion}
-                    color="text-blue-400"
-                    borderColor="border-blue-500/30"
-                  />
-                </div>
-              </>
-            )}
-          </div>
         </div>
+
+        <div className="rounded-xl border border-pharma-700 bg-pharma-800/20 p-5 mb-8">
+          <ForecastForm onSubmit={handleSubmit} loading={loading} />
+        </div>
+
+        {error && (
+          <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-3 text-sm text-red-400 mb-6">{error}</div>
+        )}
+
+        {result && (
+          <div className="space-y-6">
+            <ComparisonView
+              atheryx={result.atheryx}
+              elysion={result.elysion}
+              biomarkerMultiplier={result.biomarker_multiplier}
+              hasBiomarkers={result.has_biomarkers}
+            />
+
+            <ForecastChart
+              atheryxRows={result.atheryx.rows}
+              elysionRows={result.elysion.rows}
+              startingWeight={result.atheryx.summary.starting_weight}
+              targetWeight={result.target_weight}
+            />
+
+            <p className="text-xs text-pharma-600 text-center">
+              ⚠️ Forecast based on clinical trial averages (SURMOUNT-1, Retatrutide Phase 2)
+              and optional biomarker adjustments. Individual results vary. Rx only.
+            </p>
+          </div>
+        )}
       </div>
     </>
-  );
+  )
 }
