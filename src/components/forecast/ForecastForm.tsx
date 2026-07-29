@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { products } from '../../lib/products'
+import { autoTargetWeight } from '../../lib/forecast-model'
 import type { BiomarkerInput, PatientInput } from '../../lib/forecast-model'
 
 interface ForecastFormProps {
@@ -8,11 +9,14 @@ interface ForecastFormProps {
 }
 
 export default function ForecastForm({ onSubmit, loading }: ForecastFormProps) {
-  const [height, setHeight] = useState(165)
-  const [weight, setWeight] = useState(85)
+  // Default values for a typical Malaysian patient
+  const defaultHeight = 165
+  const defaultWeight = 85
+
+  const [height, setHeight] = useState(defaultHeight)
+  const [weight, setWeight] = useState(defaultWeight)
   const [age, setAge] = useState(35)
   const [gender, setGender] = useState<'male' | 'female'>('female')
-  const [targetWeight, setTargetWeight] = useState(65)
   const [selectedSlug, setSelectedSlug] = useState(products[0].slug)
   const [showBiomarkers, setShowBiomarkers] = useState(false)
   const [insulin, setInsulin] = useState('')
@@ -20,8 +24,10 @@ export default function ForecastForm({ onSubmit, loading }: ForecastFormProps) {
   const [vitaminD, setVitaminD] = useState('')
   const [homocysteine, setHomocysteine] = useState('')
 
-  // Auto-calculate target weight as ~75% of current (healthy weight loss)
-  const suggestTarget = (w: number) => Math.round(w * 0.76 * 10) / 10
+  // Auto-calculated target weight (BMI 22.5)
+  const targetWeight = useMemo(() => autoTargetWeight(height), [height])
+
+  const bmi = weight / ((height / 100) * (height / 100))
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -36,13 +42,10 @@ export default function ForecastForm({ onSubmit, loading }: ForecastFormProps) {
       weight_kg: weight,
       age,
       gender,
-      target_weight_kg: targetWeight,
       selectedProductSlug: selectedSlug,
       biomarkers: Object.keys(biomarkers).length > 0 ? biomarkers : undefined,
     })
   }
-
-  const bmi = weight / ((height / 100) * (height / 100))
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -64,7 +67,7 @@ export default function ForecastForm({ onSubmit, loading }: ForecastFormProps) {
           <input
             type="number"
             value={weight}
-            onChange={e => { const w = Number(e.target.value); setWeight(w); setTargetWeight(suggestTarget(w)) }}
+            onChange={e => setWeight(Number(e.target.value))}
             className="w-full bg-pharma-800 border border-pharma-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-500"
             min={40} max={250} step={0.1}
           />
@@ -94,41 +97,50 @@ export default function ForecastForm({ onSubmit, loading }: ForecastFormProps) {
         </div>
       </div>
 
-      {/* BMI indicator */}
-      <div className="flex items-center gap-3 text-sm">
-        <span className="text-pharma-400">Current BMI:</span>
-        <span className="font-bold text-white">{bmi.toFixed(1)}</span>
-        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-pharma-700 text-pharma-300">
-          {bmi < 18.5 ? 'Underweight' : bmi < 23 ? 'Normal' : bmi < 27.5 ? 'Overweight' : 'Obese'}
-        </span>
+      {/* BMI + target weight row */}
+      <div className="flex flex-wrap items-center gap-4 text-sm">
+        <div className="flex items-center gap-2">
+          <span className="text-pharma-400">Current BMI:</span>
+          <span className="font-bold text-white">{bmi.toFixed(1)}</span>
+          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+            bmi < 18.5 ? 'bg-blue-500/20 text-blue-400' :
+            bmi < 23 ? 'bg-green-500/20 text-green-400' :
+            bmi < 27.5 ? 'bg-yellow-500/20 text-yellow-400' :
+            'bg-red-500/20 text-red-400'
+          }`}>
+            {bmi < 18.5 ? 'Underweight' : bmi < 23 ? 'Normal' : bmi < 27.5 ? 'Overweight' : 'Obese'}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-pharma-400">Target Weight:</span>
+          <span className="font-bold text-green-400">{targetWeight} kg</span>
+          <span className="text-pharma-500 text-xs">(BMI 22.5, auto-calculated)</span>
+        </div>
+
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-pharma-400">Weight to Lose:</span>
+          <span className="font-bold text-accent-400">{Math.max(0, Math.round((weight - targetWeight) * 10) / 10)} kg</span>
+          <span className="text-pharma-500 text-xs">({Math.max(0, Math.round(((weight - targetWeight) / weight) * 1000) / 10)}%)</span>
+        </div>
       </div>
 
-      {/* Target weight + Product */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-pharma-300 mb-1">Target Weight (kg)</label>
-          <input
-            type="number"
-            value={targetWeight}
-            onChange={e => setTargetWeight(Number(e.target.value))}
-            className="w-full bg-pharma-800 border border-pharma-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-500"
-            min={40} max={weight} step={0.1}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-pharma-300 mb-1">Product</label>
-          <select
-            value={selectedSlug}
-            onChange={e => setSelectedSlug(e.target.value)}
-            className="w-full bg-pharma-800 border border-pharma-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-500"
-          >
-            {products.map(p => (
-              <option key={p.slug} value={p.slug}>
-                {p.brand === 'atheryx' ? 'ATHERYX™' : 'ELYSION™'} {p.peptide} {p.dosage_mg}mg ({p.per_dose_mg}mg/dose)
-              </option>
-            ))}
-          </select>
-        </div>
+      {/* Product */}
+      <div>
+        <label className="block text-sm font-medium text-pharma-300 mb-1">
+          Product <span className="text-pharma-500 text-xs">(select your target dose pen — dose titrates up to this ceiling)</span>
+        </label>
+        <select
+          value={selectedSlug}
+          onChange={e => setSelectedSlug(e.target.value)}
+          className="w-full bg-pharma-800 border border-pharma-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-500"
+        >
+          {products.map(p => (
+            <option key={p.slug} value={p.slug}>
+              {p.brand === 'atheryx' ? 'ATHERYX™' : 'ELYSION™'} {p.peptide} {p.dosage_mg}mg ({p.per_dose_mg}mg/dose)
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Biomarker toggle */}
