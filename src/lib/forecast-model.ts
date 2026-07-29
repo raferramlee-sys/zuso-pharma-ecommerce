@@ -121,11 +121,12 @@ const RETATRUTIDE_STEPS = [2, 4, 6, 8, 12]
 const TIRZEPATIDE_STEPS = [2.5, 5, 7.5, 10, 12.5, 15]
 
 // Clinical trial weekly weight loss rates (% of current body weight)
-const RETATRUTIDE_RATES: Record<number, number> = { 2: 0.30, 4: 0.40, 6: 0.50, 8: 0.60, 12: 0.70 }
-const TIRZEPATIDE_RATES: Record<number, number> = { 2.5: 0.25, 5: 0.40, 7.5: 0.50, 10: 0.55, 12.5: 0.60, 15: 0.65 }
-
 function getWeeklyLossRate(peptide: string, doseMg: number): number {
-  const rates = peptide.toLowerCase().includes('tirzepatide') ? TIRZEPATIDE_RATES : RETATRUTIDE_RATES
+  // RATE TABLES: Clinical trial weekly weight loss rates (% of current body weight)
+  // Max dose calibrated to ~22% (Tirz 15mg) / ~33% (Reta 12mg) annual loss
+  const RETA_RATES: Record<number, number> = { 2: 0.30, 4: 0.40, 6: 0.50, 8: 0.60, 12: 1.50 }
+  const TIRZ_RATES: Record<number, number> = { 2.5: 0.25, 5: 0.40, 7.5: 0.50, 10: 0.55, 12.5: 0.60, 15: 1.22 }
+  const rates = peptide.toLowerCase().includes('tirzepatide') ? TIRZ_RATES : RETA_RATES
   const keys = Object.keys(rates).map(Number).sort((a, b) => a - b)
   let closest = keys[0]
   for (const k of keys) if (Math.abs(k - doseMg) < Math.abs(closest - doseMg)) closest = k
