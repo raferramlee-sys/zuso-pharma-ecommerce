@@ -2,9 +2,23 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Product } from '../types'
 
+/**
+ * Custom sort: ATHERYX first, then ELYSION.
+ * Within each brand: regular pens first (by ascending dosage), then ezipens (by ascending dosage).
+ */
+function sortProducts(products: Product[]): Product[] {
+  return [...products].sort((a, b) => {
+    // Brand priority: atheryx first
+    if (a.brand !== b.brand) return a.brand === 'atheryx' ? -1 : 1
+    // Within same brand: regular pens before ezipens
+    if (!!a.is_ezipen !== !!b.is_ezipen) return a.is_ezipen ? 1 : -1
+    // Then by dosage ascending
+    return (a.dosage_mg || 0) - (b.dosage_mg || 0)
+  })
+}
+
 export function useProducts() {
   const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let cancelled = false
@@ -13,16 +27,14 @@ export function useProducts() {
         .from('products')
         .select('*')
         .eq('active', true)
-        .order('created_at', { ascending: true })
 
       if (!cancelled) {
-        setProducts((data || []) as Product[])
-        setLoading(false)
+        setProducts(sortProducts((data || []) as Product[]))
       }
     }
     load()
     return () => { cancelled = true }
   }, [])
 
-  return { products, loading }
+  return { products }
 }
