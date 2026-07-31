@@ -1,12 +1,14 @@
 import { Helmet } from 'react-helmet-async'
 import { useSearchParams, Link } from 'react-router-dom'
 import ProductCard from '../components/product/ProductCard'
-import { products } from '../lib/products'
+import { useProducts } from '../hooks/useProducts'
 
 export default function ProductsPage() {
   const [searchParams] = useSearchParams()
   const brandFilter = searchParams.get('brand')
   const canonicalUrl = 'https://pharma.zuso-boltz-agentic.app/products'
+
+  const { products, loading } = useProducts()
 
   const filtered = brandFilter
     ? products.filter(p => p.brand === brandFilter)
@@ -98,13 +100,19 @@ export default function ProductsPage() {
         </div>
 
         {/* Product grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {filtered.map(product => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <div className="border-2 border-accent-500 border-t-transparent rounded-full animate-spin w-10 h-10" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {filtered.map(product => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
 
-        {filtered.length === 0 && (
+        {!loading && filtered.length === 0 && (
           <div className="text-center py-20">
             <p className="text-pharma-400">No products found.</p>
           </div>

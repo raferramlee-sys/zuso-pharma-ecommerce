@@ -1,6 +1,7 @@
 import type { Product } from '../types'
+import { supabase } from './supabase'
 
-export const products: Product[] = [
+export const seedProducts: Product[] = [
   // ─── ATHERYX (Retatrutide) ────────────────────────────
   {
     id: 'ath-10',
@@ -267,3 +268,16 @@ export const products: Product[] = [
     active: true,
   },
 ]
+
+// Backward-compat alias — prefer seedProducts for clarity
+export const products = seedProducts
+
+export async function getProducts(): Promise<Product[]> {
+  const { data } = await supabase.from('products').select('*').eq('active', true).order('dosage_mg')
+  return (data || []) as Product[]
+}
+
+export async function getProductBySlug(slug: string): Promise<Product | null> {
+  const { data } = await supabase.from('products').select('*').eq('slug', slug).single()
+  return data as Product | null
+}

@@ -1,14 +1,44 @@
+import { useState, useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { useParams, Link } from 'react-router-dom'
-import { products } from '../lib/products'
+import { supabase } from '../lib/supabase'
 import { useCart } from '../hooks/useCart'
 import { useSellerDiscount, getDiscountedPrice } from '../hooks/useSellerDiscount'
+import type { Product } from '../types'
 
 export default function ProductDetailPage() {
   const { slug } = useParams()
   const { addItem } = useCart()
   const { discountPct, isActive } = useSellerDiscount()
-  const product = products.find(p => p.slug === slug)
+
+  const [product, setProduct] = useState<Product | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      const { data } = await supabase
+        .from('products')
+        .select('*')
+        .eq('slug', slug)
+        .eq('active', true)
+        .single()
+      if (!cancelled) {
+        setProduct(data as Product | null)
+        setLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [slug])
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-20 flex justify-center">
+        <div className="border-2 border-accent-500 border-t-transparent rounded-full animate-spin w-10 h-10" />
+      </div>
+    )
+  }
 
   if (!product) {
     return (

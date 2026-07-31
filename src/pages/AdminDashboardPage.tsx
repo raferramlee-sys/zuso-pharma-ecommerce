@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getSellerBySession, logoutSeller } from '../lib/auth'
-import { getAllOrders, getAllSellers, updateOrderStatus, updateSellerConfig, notifyPatientStatusChange } from '../lib/api'
-import type { Seller, PharmaOrder, OrderStatus } from '../types'
+import { getAllOrders, getAllSellers, updateOrderStatus, updateSellerConfig, notifyPatientStatusChange, adminGetAllProducts, adminCreateProduct, adminUpdateProduct, adminDeleteProduct } from '../lib/api'
+import type { Seller, PharmaOrder, OrderStatus, Product } from '../types'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_FLOW } from '../types'
+import ProductEditModal from '../components/admin/ProductEditModal'
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate()
@@ -13,7 +14,7 @@ export default function AdminDashboardPage() {
   const [authLoading, setAuthLoading] = useState(true)
 
   // Tab state
-  const [activeTab, setActiveTab] = useState<'orders' | 'sellers'>('orders')
+  const [activeTab, setActiveTab] = useState<'orders' | 'sellers' | 'products'>('orders')
 
   // Orders state
   const [orders, setOrders] = useState<PharmaOrder[]>([])
@@ -23,6 +24,13 @@ export default function AdminDashboardPage() {
   const [sellers, setSellers] = useState<Seller[]>([])
   const [sellersLoading, setSellersLoading] = useState(false)
   const [savingSellerId, setSavingSellerId] = useState<string | null>(null)
+
+  // Products state
+  const [products, setProducts] = useState<Product[]>([])
+  const [productsLoading, setProductsLoading] = useState(false)
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [editingProduct, setEditingProduct] = useState<Product | undefined>()
+  const [editMode, setEditMode] = useState<'create' | 'edit'>('create')
 
   // Feedback
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -69,12 +77,24 @@ export default function AdminDashboardPage() {
     setSellersLoading(false)
   }, [])
 
+  const loadProducts = useCallback(async () => {
+    setProductsLoading(true)
+    try {
+      const data = await adminGetAllProducts()
+      setProducts(data)
+    } catch {
+      showMessage('error', 'Failed to load products')
+    }
+    setProductsLoading(false)
+  }, [])
+
   useEffect(() => {
     if (!authLoading && admin) {
       loadOrders()
       loadSellers()
+      loadProducts()
     }
-  }, [authLoading, admin, loadOrders, loadSellers])
+  }, [authLoading, admin, loadOrders, loadSellers, loadProducts])
 
   // ─── Helpers ───
   const showMessage = (type: 'success' | 'error', text: string) => {
@@ -193,6 +213,16 @@ export default function AdminDashboardPage() {
             }`}
           >
             Sellers
+          </button>
+          <button
+            onClick={() => setActiveTab('products')}
+            className={`px-6 py-3 text-sm font-semibold transition-colors border-b-2 -mb-px ${
+              activeTab === 'products'
+                ? 'text-accent-400 border-accent-500'
+                : 'text-pharma-400 border-transparent hover:text-pharma-300'
+            }`}
+          >
+            Products
           </button>
         </div>
 
@@ -350,7 +380,147 @@ export default function AdminDashboardPage() {
             )}
           </div>
         )}
+
+        {/* ─── TAB: Products ─── */}
+        {activeTab === 'products' && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white">
+                All Products ({products.length})
+              </h3>
+              <button
+                onClick={() => {
+                  setEditMode('create')
+                  setEditingProduct(undefined)
+                  setEditModalOpen(true)
+                }}
+                className="px-4 py-2 rounded-btn bg-accent-500 hover:bg-accent-600 text-white text-sm font-semibold transition-colors"
+              >
+                + Add Product
+              </button>
+            </div>
+
+            <div className="rounded-card bg-pharma-850/50 border border-pharma-700/50 overflow-hidden">
+              {productsLoading ? (
+                <div className="p-12 text-center text-pharma-400">Loading products...</div>
+              ) : products.length === 0 ? (
+                <div className="p-12 text-center text-pharma-400">No products found.</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-pharma-700/50 bg-pharma-900/40">
+                        <th className="text-left text-pharma-400 font-medium px-4 py-3">Brand</th>
+                        <th className="text-left text-pharma-400 font-medium px-4 py-3">Name</th>
+                        <th className="text-center text-pharma-400 font-medium px-4 py-3">Dosage</th>
+                        <th className="text-right text-pharma-400 font-medium px-4 py-3">Price (RM)</th>
+                        <th className="text-center text-pharma-400 font-medium px-4 py-3">Stock</th>
+                        <th className="text-center text-pharma-400 font-medium px-4 py-3">Active</th>
+                        <th className="text-center text-pharma-400 font-medium px-4 py-3">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {products.map(p => (
+                        <tr key={p.id} className="border-b border-pharma-700/30 hover:bg-pharma-800/30 transition-colors">
+                          <td className="px-4 py-3">
+                            <span
+                              className={`inline-block text-xs font-bold tracking-wider uppercase px-2 py-0.5 rounded ${
+                                p.brand === 'atheryx'
+                                  ? 'text-purple-300 bg-purple-500/15'
+                                  : 'text-blue-300 bg-blue-500/15'
+                              }`}
+                            >
+                              {p.brand === 'atheryx' ? 'ATHERYX' : 'ELYSION'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-white text-sm">
+                            <div>{p.name}</div>
+                            {p.display_name && (
+                              <div className="text-pharma-400 text-xs mt-0.5">{p.display_name}</div>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-center text-pharma-300">
+                            {p.dosage_mg}mg
+                          </td>
+                          <td className="px-4 py-3 text-right text-white font-medium">
+                            RM {p.price_myr.toLocaleString()}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span
+                              className={`text-sm font-medium ${
+                                p.stock > 10
+                                  ? 'text-green-400'
+                                  : p.stock > 0
+                                  ? 'text-yellow-400'
+                                  : 'text-red-400'
+                              }`}
+                            >
+                              {p.stock}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span
+                              className={`inline-block w-2 h-2 rounded-full ${
+                                p.active ? 'bg-green-400' : 'bg-pharma-500'
+                              }`}
+                            />
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                onClick={() => {
+                                  setEditMode('edit')
+                                  setEditingProduct(p)
+                                  setEditModalOpen(true)
+                                }}
+                                className="text-xs px-3 py-1.5 rounded bg-accent-500/20 text-accent-400 hover:bg-accent-500/30 transition-colors"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  const ok = await adminDeleteProduct(p.id)
+                                  if (ok) {
+                                    showMessage('success', `${p.name} deactivated`)
+                                    loadProducts()
+                                  } else {
+                                    showMessage('error', 'Failed to deactivate product')
+                                  }
+                                }}
+                                className="text-xs px-3 py-1.5 rounded bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
+                              >
+                                Deactivate
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* ─── Product Edit Modal ─── */}
+      {editModalOpen && (
+        <ProductEditModal
+          mode={editMode}
+          product={editingProduct}
+          onSave={async (data) => {
+            if (editMode === 'create') {
+              await adminCreateProduct(data)
+            } else if (editingProduct) {
+              await adminUpdateProduct(editingProduct.id, data)
+            }
+            setEditModalOpen(false)
+            loadProducts()
+          }}
+          onClose={() => setEditModalOpen(false)}
+        />
+      )}
     </div>
   )
 }

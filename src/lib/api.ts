@@ -5,7 +5,7 @@
  * #7c3aed (purple) accent, #24243a borders, Arial + Courier New typography.
  */
 import { supabase } from './supabase'
-import type { PharmaOrder, Seller, CartItem, OrderStatus } from '../types'
+import type { PharmaOrder, Seller, CartItem, OrderStatus, Product } from '../types'
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 
@@ -523,6 +523,59 @@ export async function notifyAdminReceiptUploaded(order: PharmaOrder) {
     subject: `[ADMIN] Receipt Uploaded — Order #${order.id.slice(0, 8)} by ${order.patient_name}`,
     html: buildEmailShell(body),
   })
+}
+
+// ─── Admin Product CRUD ──────────────────────────────────
+
+export async function adminGetAllProducts(): Promise<Product[]> {
+  const { data } = await supabase
+    .from('products')
+    .select('*')
+    .order('created_at', { ascending: false })
+  return (data || []) as Product[]
+}
+
+export async function adminCreateProduct(product: Partial<Product>): Promise<Product | null> {
+  const slug = product.slug || generateSlug(product)
+  const { data, error } = await supabase
+    .from('products')
+    .insert({ ...product, slug })
+    .select()
+    .single()
+  if (error) throw new Error(error.message)
+  return data as Product
+}
+
+export async function adminUpdateProduct(id: string, updates: Partial<Product>): Promise<boolean> {
+  // Regenerate slug if name/brand/dosage changed
+  if (updates.name || updates.brand || updates.dosage_mg !== undefined) {
+    const slug = generateSlug(updates)
+    if (slug) updates.slug = slug
+  }
+  const { error } = await supabase
+    .from('products')
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq('id', id)
+  return !error
+}
+
+export async function adminDeleteProduct(id: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('products')
+    .update({ active: false, updated_at: new Date().toISOString() })
+    .eq('id', id)
+  return !error
+}
+
+function generateSlug(p: Partial<Product>): string {
+  const brand = p.brand || 'atheryx'
+  const brandShort = brand === 'atheryx' ? 'atheryx' : 'elysion'
+  const peptide = (p.peptide || 'peptide').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+  const dosage = p.dosage_mg ? `${p.dosage_mg}mg` : 'x'
+  const isEzipen = p.is_ezipen ? '-ezipen' : ''
+  return `${brandShort}-${peptide}${isEzipen}-${dosage}`
+    .replace(/--+/g, '-')
+    .replace(/^-|-$/g, '')
 }
 
 // ─── Convenience: notify all on new order ────────────────
