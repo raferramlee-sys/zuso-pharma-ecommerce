@@ -292,9 +292,10 @@ export default function CheckoutPage() {
           {/* Bank Transfer Info */}
           <div className="rounded-card bg-pharma-850/50 border border-pharma-700/50 p-6">
             <h2 className="text-lg font-semibold text-white mb-4">Bank Transfer</h2>
-            {appliedSeller ? (
-              <div className="bg-pharma-900/60 border border-green-500/20 rounded-btn p-4 space-y-2">
-                <p className="text-xs text-green-400 mb-2">Pay to your seller ({appliedSeller.seller_code})</p>
+
+            {appliedSeller && (
+              <div className="bg-pharma-900/60 border border-green-500/20 rounded-btn p-4 space-y-2 mb-4">
+                <p className="text-xs text-green-400 mb-2">Pay via your seller ({appliedSeller.seller_code})</p>
                 <div className="flex justify-between text-sm">
                   <span className="text-pharma-400">Bank</span>
                   <span className="text-white font-medium">{appliedSeller.bank_name || '—'}</span>
@@ -303,29 +304,46 @@ export default function CheckoutPage() {
                   <span className="text-pharma-400">Account Number</span>
                   <span className="text-white font-medium font-mono">{appliedSeller.bank_acc_number || '—'}</span>
                 </div>
-                <p className="text-xs text-pharma-500 mt-2">
-                  Please upload your payment receipt below. Your order will be processed after payment is verified.
-                </p>
-              </div>
-            ) : (
-              <div className="bg-pharma-900/60 border border-pharma-700/50 rounded-btn p-4 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-pharma-400">Bank</span>
-                  <span className="text-white font-medium">Maybank</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-pharma-400">Account Number</span>
-                  <span className="text-white font-medium">1234567890</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-pharma-400">Account Name</span>
-                  <span className="text-white font-medium">Leverage Medical Sdn Bhd</span>
-                </div>
-                <p className="text-xs text-pharma-500 mt-2">
-                  Please upload your payment receipt below. Your order will be processed after payment is verified.
-                </p>
               </div>
             )}
+
+            <p className="text-xs text-pharma-500 mb-3">Or pay directly to:</p>
+
+            {/* CIMB */}
+            <div className="bg-pharma-900/60 border border-pharma-700/50 rounded-btn p-4 space-y-2 mb-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-pharma-400">Bank</span>
+                <span className="text-white font-medium">CIMB</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-pharma-400">Account Number</span>
+                <span className="text-white font-medium font-mono">8605053319</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-pharma-400">Account Name</span>
+                <span className="text-white font-medium">LEVERAGE MEDICAL SDN BHD</span>
+              </div>
+            </div>
+
+            {/* Maybank */}
+            <div className="bg-pharma-900/60 border border-pharma-700/50 rounded-btn p-4 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-pharma-400">Bank</span>
+                <span className="text-white font-medium">Maybank</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-pharma-400">Account Number</span>
+                <span className="text-white font-medium font-mono">1234567890</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-pharma-400">Account Name</span>
+                <span className="text-white font-medium">LEVERAGE MEDICAL SDN BHD</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-pharma-500 mt-3">
+              Please upload your payment receipt below. Your order will be processed after payment is verified.
+            </p>
           </div>
 
           {/* Receipt Upload */}
