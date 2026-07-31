@@ -1,8 +1,9 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../hooks/useCart'
 
 export default function CartPage() {
   const { items, removeItem, updateQty, subtotal, itemCount, clearCart } = useCart()
+  const navigate = useNavigate()
 
   if (items.length === 0) {
     return (
@@ -91,6 +92,7 @@ export default function CartPage() {
         </div>
 
         <button
+          onClick={() => navigate('/checkout')}
           className="w-full py-3.5 rounded-btn bg-accent-500 hover:bg-accent-600 text-white font-semibold transition-colors shadow-lg shadow-accent-500/20"
         >
           Proceed to Checkout

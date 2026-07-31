@@ -35,6 +35,12 @@ export default function Navbar() {
               >
                 ELYSION
               </Link>
+              <Link
+                to="/seller-login"
+                className="text-sm text-pharma-400 hover:text-accent-400 transition-colors ml-4 pl-4 border-l border-pharma-700/50"
+              >
+                Seller
+              </Link>
             </div>
           </div>
 
