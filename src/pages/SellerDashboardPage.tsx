@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import type { Seller, PharmaOrder, OrderStatus, CartItem } from '../types'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_FLOW } from '../types'
 import { getSellerBySession, logoutSeller } from '../lib/auth'
-import { getOrdersBySeller, updateOrderStatus, notifyStatusChange } from '../lib/api'
+import { getOrdersBySeller, updateOrderStatus, notifyPatientStatusChange } from '../lib/api'
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
   ordered: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
@@ -75,7 +75,7 @@ export default function SellerDashboardPage() {
         )
 
         // Send notification
-        await notifyStatusChange(order, oldStatus, newStatus)
+        await notifyPatientStatusChange(order, oldStatus, newStatus)
       } catch (err) {
         console.error('Status update failed:', err)
         alert('Failed to update order status')

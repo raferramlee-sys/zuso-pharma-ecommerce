@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getSellerBySession, logoutSeller } from '../lib/auth'
-import { getAllOrders, getAllSellers, updateOrderStatus, updateSellerConfig, notifyStatusChange } from '../lib/api'
+import { getAllOrders, getAllSellers, updateOrderStatus, updateSellerConfig, notifyPatientStatusChange } from '../lib/api'
 import type { Seller, PharmaOrder, OrderStatus } from '../types'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_FLOW } from '../types'
 
@@ -103,7 +103,7 @@ export default function AdminDashboardPage() {
 
     // Send notification
     try {
-      await notifyStatusChange({ ...order, status: newStatus }, oldStatus, newStatus)
+      await notifyPatientStatusChange({ ...order, status: newStatus }, oldStatus, newStatus)
     } catch {
       // Notification failure is non-critical
     }

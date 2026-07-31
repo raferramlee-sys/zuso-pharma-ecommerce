@@ -2,7 +2,7 @@ import { useState, type FormEvent, type ChangeEvent, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../hooks/useCart'
 import { useSellerDiscount } from '../hooks/useSellerDiscount'
-import { lookupSellerCode, submitOrder, uploadReceipt, notifyNewOrder } from '../lib/api'
+import { lookupSellerCode, submitOrder, uploadReceipt, notifyAllNewOrder } from '../lib/api'
 import type { CartItem, Seller } from '../types'
 
 export default function CheckoutPage() {
@@ -114,9 +114,9 @@ export default function CheckoutPage() {
         await uploadReceipt(order.id, receiptFile)
       }
 
-      // Notify seller and admin
+      // Notify all parties
       const sellerEmail = appliedSeller?.email ?? 'admin@zusopharma.com'
-      await notifyNewOrder(order, sellerEmail)
+      await notifyAllNewOrder(order, sellerEmail)
 
       // Clear cart and show success
       clearCart()

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { registerSeller } from '../lib/auth'
+import { notifySellerWelcome, notifyAdminNewSeller } from '../lib/api'
 
 type FormErrors = {
   email?: string
@@ -96,6 +97,10 @@ export default function SellerRegistrationPage() {
       }
 
       setSellerCode(result.seller.seller_code)
+
+      // Fire-and-forget notifications
+      notifySellerWelcome(result.seller).catch(console.error)
+      notifyAdminNewSeller(result.seller).catch(console.error)
 
       // Auto-redirect after showing code
       setTimeout(() => {
