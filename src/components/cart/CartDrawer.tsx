@@ -1,8 +1,12 @@
 import { Link } from 'react-router-dom'
 import { useCart } from '../../hooks/useCart'
+import { useSellerDiscount, getDiscountedPrice } from '../../hooks/useSellerDiscount'
 
 export default function CartDrawer() {
   const { items, isOpen, setIsOpen, removeItem, updateQty, subtotal, itemCount } = useCart()
+  const { discountPct, sellerCode, isActive } = useSellerDiscount()
+  const discountedSubtotal = isActive ? items.reduce((sum, i) => sum + getDiscountedPrice(i.price_myr, discountPct) * i.quantity, 0) : subtotal
+  const discountAmount = subtotal - discountedSubtotal
 
   if (!isOpen) return null
 
@@ -74,6 +78,16 @@ export default function CartDrawer() {
                 <div className="flex justify-between text-sm">
                   <span className="text-pharma-300">Subtotal</span>
                   <span className="text-white font-semibold">RM {subtotal.toLocaleString()}</span>
+                </div>
+                {isActive && discountPct > 0 && (
+                  <div className="flex justify-between text-xs">
+                    <span className="text-green-400">Discount (−{discountPct}% · {sellerCode})</span>
+                    <span className="text-green-400">−RM {discountAmount.toLocaleString()}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm font-bold">
+                  <span className="text-white">Total</span>
+                  <span className="text-white">RM {discountedSubtotal.toLocaleString()}</span>
                 </div>
                 <Link
                   to="/cart"

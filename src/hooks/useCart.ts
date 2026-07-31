@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import type { CartItem } from '../types'
-import { products } from '../lib/products'
+import type { CartItem, Product } from '../types'
 
 const CART_KEY = 'pharma_cart'
 
@@ -18,16 +17,15 @@ function saveCart(items: CartItem[]) {
 export function useCart() {
   const [items, setItems] = useState<CartItem[]>(loadCart)
   const [isOpen, setIsOpen] = useState(false)
+  const [addedProductId, setAddedProductId] = useState<string | null>(null)
 
   useEffect(() => { saveCart(items) }, [items])
 
-  const addItem = useCallback((productId: string, qty: number = 1) => {
-    const product = products.find(p => p.id === productId)
-    if (!product) return
+  const addItem = useCallback((product: Product, qty: number = 1) => {
     setItems(prev => {
-      const existing = prev.find(i => i.productId === productId)
+      const existing = prev.find(i => i.productId === product.id)
       if (existing) {
-        return prev.map(i => i.productId === productId ? { ...i, quantity: i.quantity + qty } : i)
+        return prev.map(i => i.productId === product.id ? { ...i, quantity: i.quantity + qty } : i)
       }
       return [...prev, {
         productId: product.id,
@@ -40,6 +38,11 @@ export function useCart() {
         quantity: qty,
       }]
     })
+
+    // Visual feedback — flash + auto-open drawer
+    setAddedProductId(product.id)
+    setTimeout(() => setAddedProductId(null), 800)
+    setIsOpen(true)
   }, [])
 
   const removeItem = useCallback((productId: string) => {
@@ -56,5 +59,5 @@ export function useCart() {
   const itemCount = items.reduce((sum, i) => sum + i.quantity, 0)
   const subtotal = items.reduce((sum, i) => sum + i.price_myr * i.quantity, 0)
 
-  return { items, addItem, removeItem, updateQty, clearCart, itemCount, subtotal, isOpen, setIsOpen }
+  return { items, addItem, removeItem, updateQty, clearCart, itemCount, subtotal, isOpen, setIsOpen, addedProductId }
 }

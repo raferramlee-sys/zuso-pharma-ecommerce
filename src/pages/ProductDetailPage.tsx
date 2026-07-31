@@ -217,7 +217,7 @@ export default function ProductDetailPage() {
                 <p className="text-xs text-pharma-500 mt-1">Sterile A · Rx Only</p>
               </div>
               <button
-                onClick={() => addItem(product.id)}
+                onClick={() => addItem(product)}
                 className={`px-8 py-3.5 rounded-btn text-white font-semibold transition-colors ${isAtheryx ? 'bg-brand-atheryx hover:bg-accent-600' : 'bg-brand-elysion hover:bg-accent-600'} shadow-lg ${isAtheryx ? 'shadow-brand-atheryx/20' : 'shadow-brand-elysion/20'}`}
               >
                 Add to Cart — RM {(isActive && discountPct > 0 ? getDiscountedPrice(product.price_myr, discountPct) : product.price_myr).toLocaleString()}

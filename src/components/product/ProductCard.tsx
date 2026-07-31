@@ -40,9 +40,10 @@ const ELYSION_ICONS = [
 ]
 
 export default function ProductCard({ product }: { product: Product }) {
-  const { addItem } = useCart()
+  const { addItem, addedProductId } = useCart()
   const { discountPct, isActive } = useSellerDiscount()
   const isAtheryx = product.brand === 'atheryx'
+  const justAdded = addedProductId === product.id
 
   // ─── ATHERYX variant — promo-matched layout ───
   if (isAtheryx) {
@@ -125,8 +126,8 @@ export default function ProductCard({ product }: { product: Product }) {
                 Details
               </Link>
               <button
-                onClick={() => addItem(product.id)}
-                className="px-3 py-2 text-xs font-semibold rounded-btn text-white bg-brand-atheryx hover:bg-accent-600 transition-colors"
+                onClick={() => addItem(product)}
+                className={`px-3 py-2 text-xs font-semibold rounded-btn text-white transition-all ${justAdded ? 'bg-green-500 scale-105' : 'bg-brand-atheryx hover:bg-accent-600'}`}
               >
                 Add to Cart
               </button>
@@ -224,8 +225,8 @@ export default function ProductCard({ product }: { product: Product }) {
               Details
             </Link>
             <button
-              onClick={() => addItem(product.id)}
-              className="px-3 py-2 text-xs font-semibold rounded-btn text-white bg-brand-elysion hover:bg-accent-600 transition-colors"
+              onClick={() => addItem(product)}
+              className={`px-3 py-2 text-xs font-semibold rounded-btn text-white transition-all ${justAdded ? 'bg-green-500 scale-105' : 'bg-brand-elysion hover:bg-accent-600'}`}
             >
               Add to Cart
             </button>
