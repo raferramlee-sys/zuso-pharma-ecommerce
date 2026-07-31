@@ -1,9 +1,16 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../hooks/useCart'
+import { useSellerDiscount, getDiscountedPrice } from '../hooks/useSellerDiscount'
 
 export default function CartPage() {
   const { items, removeItem, updateQty, subtotal, itemCount, clearCart } = useCart()
+  const { discountPct, sellerCode, isActive } = useSellerDiscount()
   const navigate = useNavigate()
+
+  const discountedSubtotal = isActive
+    ? items.reduce((sum, i) => sum + getDiscountedPrice(i.price_myr, discountPct) * i.quantity, 0)
+    : subtotal
+  const discountAmount = subtotal - discountedSubtotal
 
   if (items.length === 0) {
     return (
@@ -61,7 +68,14 @@ export default function CartPage() {
               </div>
 
               <div className="text-right min-w-[80px]">
-                <p className="text-sm font-semibold text-white">RM {(item.price_myr * item.quantity).toLocaleString()}</p>
+                {isActive && discountPct > 0 ? (
+                  <>
+                    <p className="text-xs text-pharma-500 line-through">RM {(item.price_myr * item.quantity).toLocaleString()}</p>
+                    <p className="text-sm font-semibold text-green-400">RM {(getDiscountedPrice(item.price_myr, discountPct) * item.quantity).toLocaleString()}</p>
+                  </>
+                ) : (
+                  <p className="text-sm font-semibold text-white">RM {(item.price_myr * item.quantity).toLocaleString()}</p>
+                )}
                 <p className="text-[10px] text-pharma-500">RM {item.price_myr.toLocaleString()} each</p>
               </div>
 
@@ -81,6 +95,14 @@ export default function CartPage() {
           <span className="text-pharma-300">Subtotal</span>
           <span className="text-white font-semibold">RM {subtotal.toLocaleString()}</span>
         </div>
+
+        {isActive && discountPct > 0 && (
+          <div className="flex justify-between text-xs text-green-400 mb-2">
+            <span>Discount ({discountPct}% — code: {sellerCode})</span>
+            <span>−RM {discountAmount.toLocaleString()}</span>
+          </div>
+        )}
+
         <div className="flex justify-between text-xs text-pharma-400 mb-6">
           <span>Shipping</span>
           <span>Calculated at checkout</span>
@@ -88,7 +110,7 @@ export default function CartPage() {
 
         <div className="flex justify-between text-lg font-bold border-t border-pharma-700 pt-4 mb-6">
           <span className="text-white">Total</span>
-          <span className="text-white">RM {subtotal.toLocaleString()}</span>
+          <span className="text-white">RM {discountedSubtotal.toLocaleString()}</span>
         </div>
 
         <button

@@ -2,10 +2,12 @@ import { Helmet } from 'react-helmet-async'
 import { useParams, Link } from 'react-router-dom'
 import { products } from '../lib/products'
 import { useCart } from '../hooks/useCart'
+import { useSellerDiscount, getDiscountedPrice } from '../hooks/useSellerDiscount'
 
 export default function ProductDetailPage() {
   const { slug } = useParams()
   const { addItem } = useCart()
+  const { discountPct, isActive } = useSellerDiscount()
   const product = products.find(p => p.slug === slug)
 
   if (!product) {
@@ -171,14 +173,24 @@ export default function ProductDetailPage() {
             <div className="mt-10 flex items-end justify-between">
               <div>
                 <p className="text-xs text-pharma-500 mb-1">Price</p>
-                <p className="text-3xl font-bold text-white">RM {product.price_myr.toLocaleString()}</p>
+                {isActive && discountPct > 0 ? (
+                  <>
+                    <p className="text-xs text-pharma-500 line-through">RM {product.price_myr.toLocaleString()}</p>
+                    <p className="text-3xl font-bold text-green-400">
+                      RM {getDiscountedPrice(product.price_myr, discountPct).toLocaleString()}
+                      <span className="ml-2 text-sm font-medium text-green-400/70">−{discountPct}%</span>
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-3xl font-bold text-white">RM {product.price_myr.toLocaleString()}</p>
+                )}
                 <p className="text-xs text-pharma-500 mt-1">Sterile A · Rx Only</p>
               </div>
               <button
                 onClick={() => addItem(product.id)}
                 className={`px-8 py-3.5 rounded-btn text-white font-semibold transition-colors ${isAtheryx ? 'bg-brand-atheryx hover:bg-accent-600' : 'bg-brand-elysion hover:bg-accent-600'} shadow-lg ${isAtheryx ? 'shadow-brand-atheryx/20' : 'shadow-brand-elysion/20'}`}
               >
-                Add to Cart — RM {product.price_myr.toLocaleString()}
+                Add to Cart — RM {(isActive && discountPct > 0 ? getDiscountedPrice(product.price_myr, discountPct) : product.price_myr).toLocaleString()}
               </button>
             </div>
           </div>

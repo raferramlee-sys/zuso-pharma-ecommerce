@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useCart } from '../../hooks/useCart'
+import { useSellerDiscount, getDiscountedPrice } from '../../hooks/useSellerDiscount'
 import type { Product } from '../../types'
 
 /* SVG outline icons matching ATHERYX promo graphic */
@@ -40,6 +41,7 @@ const ELYSION_ICONS = [
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart()
+  const { discountPct, isActive } = useSellerDiscount()
   const isAtheryx = product.brand === 'atheryx'
 
   // ─── ATHERYX variant — promo-matched layout ───
@@ -105,7 +107,15 @@ export default function ProductCard({ product }: { product: Product }) {
           <div className="flex items-end justify-between">
             <div>
               <p className="text-[10px] text-pharma-500">Price</p>
-              <p className="text-xl font-bold text-white">RM {product.price_myr.toLocaleString()}</p>
+              {isActive && discountPct > 0 ? (
+                <>
+                  <span className="text-sm text-pharma-500 line-through">RM {product.price_myr.toLocaleString()}</span>
+                  <span className="text-lg font-bold text-green-400">RM {getDiscountedPrice(product.price_myr, discountPct).toLocaleString()}</span>
+                  <span className="text-xs text-green-400/70">−{discountPct}%</span>
+                </>
+              ) : (
+                <p className="text-xl font-bold text-white">RM {product.price_myr.toLocaleString()}</p>
+              )}
             </div>
             <div className="flex gap-2">
               <Link
@@ -196,7 +206,15 @@ export default function ProductCard({ product }: { product: Product }) {
         <div className="flex items-end justify-between">
           <div>
             <p className="text-[10px] text-pharma-500">Price</p>
-            <p className="text-xl font-bold text-white">RM {product.price_myr.toLocaleString()}</p>
+            {isActive && discountPct > 0 ? (
+              <>
+                <span className="text-sm text-pharma-500 line-through">RM {product.price_myr.toLocaleString()}</span>
+                <span className="text-lg font-bold text-green-400">RM {getDiscountedPrice(product.price_myr, discountPct).toLocaleString()}</span>
+                <span className="text-xs text-green-400/70">−{discountPct}%</span>
+              </>
+            ) : (
+              <p className="text-xl font-bold text-white">RM {product.price_myr.toLocaleString()}</p>
+            )}
           </div>
           <div className="flex gap-2">
             <Link

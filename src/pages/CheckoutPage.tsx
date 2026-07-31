@@ -1,12 +1,14 @@
-import { useState, type FormEvent, type ChangeEvent } from 'react'
+import { useState, type FormEvent, type ChangeEvent, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../hooks/useCart'
+import { useSellerDiscount } from '../hooks/useSellerDiscount'
 import { lookupSellerCode, submitOrder, uploadReceipt, notifyNewOrder } from '../lib/api'
 import type { CartItem, Seller } from '../types'
 
 export default function CheckoutPage() {
   const navigate = useNavigate()
   const { items, subtotal, clearCart } = useCart()
+  const { sellerCode: contextCode, discountPct: contextDiscountPct, isActive } = useSellerDiscount()
 
   // Form state
   const [patientName, setPatientName] = useState('')
@@ -54,6 +56,15 @@ export default function CheckoutPage() {
     }
     setSellerLoading(false)
   }
+
+  // Auto-fill seller code from discount context
+  useEffect(() => {
+    if (isActive && contextCode && !appliedSeller) {
+      setSellerCode(contextCode)
+      // Trigger the apply logic
+      handleApplySellerCode()
+    }
+  }, [isActive, contextCode])
 
   // Handle file selection
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -241,6 +252,11 @@ export default function CheckoutPage() {
           {/* Seller Code */}
           <div className="rounded-card bg-pharma-850/50 border border-pharma-700/50 p-6">
             <h2 className="text-lg font-semibold text-white mb-4">Seller Code (optional)</h2>
+
+            {isActive && contextCode && (
+              <p className="text-xs text-green-400 mb-3">Seller code from your discount</p>
+            )}
+
             <div className="flex gap-3">
               <input
                 type="text"
