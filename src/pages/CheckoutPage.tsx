@@ -333,7 +333,7 @@ export default function CheckoutPage() {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-pharma-400">Account Number</span>
-                <span className="text-white font-medium font-mono">1234567890</span>
+                <span className="text-white font-medium font-mono">556011164525</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-pharma-400">Account Name</span>

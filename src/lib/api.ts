@@ -391,7 +391,7 @@ export async function notifyPatientOrderConfirmation(order: PharmaOrder) {
         <strong style="color:${T.accent};text-transform:uppercase;letter-spacing:1px">Bank Transfer</strong><br>
         Bank: <strong style="color:${T.text}">Maybank</strong><br>
         Account: <strong style="color:${T.text}">LEVERAGE MEDICAL SDN BHD</strong><br>
-        No: <strong style="color:${T.text};font-family:${T.mono}">1234567890</strong>
+        No: <strong style="color:${T.text};font-family:${T.mono}">556011164525</strong>
       </div>
       <div style="margin-top:12px;padding:12px;background:${T.accentSoft};border-radius:${T.rSmall};font-size:12px;color:${T.muted}">
         ⚠️ Your order will be processed after payment is confirmed. Upload your receipt at the checkout page or reply to this email.
