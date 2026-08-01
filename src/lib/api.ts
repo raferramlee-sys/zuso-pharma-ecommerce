@@ -105,7 +105,11 @@ function buildLineItems(items: CartItem[], discountPct: number, discountMyr: num
     .map(
       (it) => `
     <tr style="border-bottom:1px solid ${T.border}">
-      <td style="padding:10px 8px;color:${T.text};font-size:13px">${esc(it.name)} ${esc(it.peptide)} — ${it.dosage_mg}mg</td>
+      <td style="padding:10px 8px;width:52px">${buildItemThumb(it)}</td>
+      <td style="padding:10px 8px;color:${T.text};font-size:13px">
+        <div style="font-weight:600;margin-bottom:2px">${esc(it.name)}</div>
+        <div style="color:${T.muted};font-size:11px">${esc(it.peptide)} — ${it.dosage_mg}mg</div>
+      </td>
       <td style="padding:10px 8px;color:${T.text};text-align:center;font-size:13px">${it.quantity}x</td>
       <td style="padding:10px 8px;color:${T.text};text-align:right;font-size:13px">${mn(it.price_myr)}</td>
       <td style="padding:10px 8px;color:${T.text};text-align:right;font-family:${T.mono};font-size:13px">${mn(it.price_myr * it.quantity)}</td>
@@ -117,6 +121,7 @@ function buildLineItems(items: CartItem[], discountPct: number, discountMyr: num
     <table width="100%" cellpadding="0" cellspacing="0">
       <thead>
         <tr style="border-bottom:1px solid #2f2f48">
+          <th align="left" style="padding:8px;width:52px"></th>
           <th align="left" style="padding:8px;font-size:11px;letter-spacing:1px;color:${T.dim};text-transform:uppercase">Product</th>
           <th align="center" style="padding:8px;font-size:11px;letter-spacing:1px;color:${T.dim};text-transform:uppercase">Qty</th>
           <th align="right" style="padding:8px;font-size:11px;letter-spacing:1px;color:${T.dim};text-transform:uppercase">Price</th>
@@ -131,6 +136,33 @@ function buildLineItems(items: CartItem[], discountPct: number, discountMyr: num
       <tr><td align="right" style="padding:6px 2px 2px;color:${T.white};font-size:15px;font-weight:bold">Total:</td><td align="right" style="padding:6px 2px 2px;color:${T.accent};font-size:15px;font-weight:bold">${mn(total)}</td></tr>
       ${commissionMyr !== undefined && commissionPct !== undefined ? `<tr><td align="right" style="padding:2px;color:${T.muted};font-size:12px">Commission (${commissionPct}%):</td><td align="right" style="padding:2px;color:${T.green};font-size:12px">${mn(commissionMyr)}</td></tr>` : ''}
     </table>`
+}
+
+/** Render a 48x48 product thumbnail for email */
+function buildItemThumb(it: CartItem): string {
+  if (it.image) {
+    return `<img src="${esc(it.image)}" alt="${esc(it.name)}" width="48" height="48" style="width:48px;height:48px;border-radius:8px;object-fit:cover;display:block;border:1px solid ${T.border}" />`
+  }
+  // Fallback: brand-colored circle with first letter
+  const isAth = it.brand === 'atheryx'
+  const badgeBg = isAth ? 'rgba(168,85,247,0.2)' : 'rgba(59,130,246,0.2)'
+  const badgeColor = isAth ? '#a855f7' : '#3b82f6'
+  const initial = it.name?.charAt(0)?.toUpperCase() || 'P'
+  return `<div style="width:48px;height:48px;border-radius:8px;background:${badgeBg};border:1px solid ${T.border};display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:bold;color:${badgeColor}">${esc(initial)}</div>`
+}
+
+/** Build compact items list with images for status-update emails */
+function buildCompactItems(items: CartItem[]): string {
+  return items.map(it => `
+    <div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid ${T.border}">
+      ${buildItemThumb(it)}
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:600;color:${T.white};margin-bottom:2px">${esc(it.name)}</div>
+        <div style="font-size:11px;color:${T.muted}">${esc(it.peptide)} — ${it.dosage_mg}mg &nbsp;·&nbsp; Qty: ${it.quantity}</div>
+      </div>
+      <div style="font-size:14px;font-weight:600;color:${T.text};font-family:${T.mono}">${mn(it.price_myr * it.quantity)}</div>
+    </div>
+  `).join('')
 }
 
 function kvRow(label: string, value: string): string {
@@ -446,6 +478,7 @@ export async function notifyAdminNewOrder(order: PharmaOrder) {
 
 /** 6. Order status change — patient notification */
 export async function notifyPatientStatusChange(order: PharmaOrder, oldStatus: OrderStatus, newStatus: OrderStatus) {
+  const items = order.items as CartItem[]
   const statusConfig: Record<OrderStatus, { label: string; badge: string }> = {
     ordered: { label: 'Order Placed', badge: 'Received' },
     paid: { label: 'Payment Confirmed', badge: 'Paid' },
@@ -467,9 +500,15 @@ export async function notifyPatientStatusChange(order: PharmaOrder, oldStatus: O
       `Previously: ${esc(oldCfg.label)} → Now: ${esc(newCfg.label)}`,
       { text: 'View Order', url: `https://pharma.zuso-boltz-agentic.app/checkout` }
     )}
+    ${sectionBody('Your Order', `
+      ${buildCompactItems(items)}
+      <div style="margin-top:16px;padding:12px 0 0;border-top:1px solid ${T.border};text-align:right;font-size:15px;color:${T.white}">
+        Total: <span style="color:${T.accent};font-weight:bold;font-family:${T.mono}">${mn(order.total_myr)}</span>
+      </div>
+    `)}
     ${sectionBody('Status Timeline', `
       <div style="position:relative;padding-left:24px">
-        ${(['ordered','paid','preparing_order','delivery','delivered'] as OrderStatus[]).map((s, i) => {
+        ${(['ordered','paid','preparing_order','delivery','delivered'] as OrderStatus[]).map((s) => {
           const cfg = statusConfig[s]
           const isPast = (['ordered','paid','preparing_order','delivery','delivered'] as OrderStatus[]).indexOf(s) <= (['ordered','paid','preparing_order','delivery','delivered'] as OrderStatus[]).indexOf(newStatus)
           const isCurrent = s === newStatus
