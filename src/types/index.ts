@@ -60,6 +60,7 @@ export type OrderStatus = 'ordered' | 'paid' | 'preparing_order' | 'delivery' | 
 
 export interface Seller {
   id: string
+  name: string
   email: string
   password_hash?: string
   phone: string

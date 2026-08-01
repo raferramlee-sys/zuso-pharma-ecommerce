@@ -6,6 +6,14 @@ import type { Seller, PharmaOrder, OrderStatus, Product } from '../types'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_FLOW } from '../types'
 import ProductEditModal from '../components/admin/ProductEditModal'
 
+const STATUS_COLORS: Record<OrderStatus, string> = {
+  ordered: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  paid: 'bg-green-500/20 text-green-400 border-green-500/30',
+  preparing_order: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+  delivery: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+  delivered: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+}
+
 export default function AdminDashboardPage() {
   const navigate = useNavigate()
 
@@ -31,6 +39,12 @@ export default function AdminDashboardPage() {
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | undefined>()
   const [editMode, setEditMode] = useState<'create' | 'edit'>('create')
+
+  // Seller detail modal state
+  const [selectedSeller, setSelectedSeller] = useState<Seller | null>(null)
+
+  // Order tab: selected seller filter
+  const [orderFilterSellerCode, setOrderFilterSellerCode] = useState<string | null>(null)
 
   // Feedback
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -139,6 +153,10 @@ export default function AdminDashboardPage() {
       setSellers(prev =>
         prev.map(s => (s.id === seller.id ? { ...s, [field]: value } : s))
       )
+      // Also update selectedSeller if it's the same one
+      if (selectedSeller?.id === seller.id) {
+        setSelectedSeller(prev => prev ? { ...prev, [field]: value } : null)
+      }
       showMessage('success', `Updated ${seller.email}`)
     } else {
       showMessage('error', 'Failed to update seller')
@@ -154,12 +172,36 @@ export default function AdminDashboardPage() {
       setSellers(prev =>
         prev.map(s => (s.id === seller.id ? { ...s, is_active: newActive } : s))
       )
+      if (selectedSeller?.id === seller.id) {
+        setSelectedSeller(prev => prev ? { ...prev, is_active: newActive } : null)
+      }
       showMessage('success', `${seller.email} ${newActive ? 'activated' : 'deactivated'}`)
     } else {
       showMessage('error', 'Failed to update seller')
     }
     setSavingSellerId(null)
   }
+
+  // ─── Computed: order summaries per seller ───
+  const sellerOrderSummaries = sellers.map(seller => {
+    const sellerOrders = orders.filter(o => o.seller_code === seller.seller_code)
+    const summary: Record<OrderStatus, number> = {
+      ordered: 0,
+      paid: 0,
+      preparing_order: 0,
+      delivery: 0,
+      delivered: 0,
+    }
+    sellerOrders.forEach(o => { summary[o.status]++ })
+    return { seller, summary, total: sellerOrders.length }
+  })
+
+  // ─── Filtered orders for selected seller ───
+  const filteredOrders = orderFilterSellerCode
+    ? orders.filter(o => o.seller_code === orderFilterSellerCode)
+    : orders
+
+  const selectedSellerData = sellers.find(s => s.seller_code === orderFilterSellerCode)
 
   // ─── Loading state ───
   if (authLoading) {
@@ -241,65 +283,83 @@ export default function AdminDashboardPage() {
 
         {/* ─── TAB: Orders ─── */}
         {activeTab === 'orders' && (
-          <div className="rounded-card bg-pharma-850/50 border border-pharma-700/50 overflow-hidden">
-            {ordersLoading ? (
-              <div className="p-12 text-center text-pharma-400">Loading orders...</div>
-            ) : orders.length === 0 ? (
-              <div className="p-12 text-center text-pharma-400">No orders yet.</div>
+          <div>
+            {orderFilterSellerCode ? (
+              /* ── Filtered orders for one seller ── */
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <button
+                    onClick={() => setOrderFilterSellerCode(null)}
+                    className="px-4 py-2 rounded-btn border border-pharma-600 text-pharma-300 hover:text-white hover:border-pharma-400 transition-colors text-sm"
+                  >
+                    ← Back to All Sellers
+                  </button>
+                  <span className="text-white font-semibold">
+                    {selectedSellerData?.name || 'Unknown'} — {filteredOrders.length} orders
+                  </span>
+                </div>
+                <OrdersTable
+                  orders={filteredOrders}
+                  loading={ordersLoading}
+                  onStatusChange={handleStatusChange}
+                  showSellerCode={false}
+                />
+              </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-pharma-700/50 bg-pharma-900/40">
-                      <th className="text-left text-pharma-400 font-medium px-4 py-3">Order ID</th>
-                      <th className="text-left text-pharma-400 font-medium px-4 py-3">Seller Code</th>
-                      <th className="text-left text-pharma-400 font-medium px-4 py-3">Patient</th>
-                      <th className="text-left text-pharma-400 font-medium px-4 py-3">Email</th>
-                      <th className="text-left text-pharma-400 font-medium px-4 py-3">Items</th>
-                      <th className="text-right text-pharma-400 font-medium px-4 py-3">Total</th>
-                      <th className="text-center text-pharma-400 font-medium px-4 py-3">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {orders.map(order => (
-                      <tr key={order.id} className="border-b border-pharma-700/30 hover:bg-pharma-800/30 transition-colors">
-                        <td className="px-4 py-3 text-white font-mono text-xs">
-                          {order.id.slice(0, 8)}
-                        </td>
-                        <td className="px-4 py-3 text-pharma-300 text-xs font-mono">
-                          {order.seller_code || '—'}
-                        </td>
-                        <td className="px-4 py-3 text-white">
-                          {order.patient_name}
-                        </td>
-                        <td className="px-4 py-3 text-pharma-300 text-xs">
-                          {order.patient_email}
-                        </td>
-                        <td className="px-4 py-3 text-pharma-300 text-xs">
-                          {(order.items as Array<{ name: string; quantity: number }>)
-                            ?.map(i => `${i.name} ×${i.quantity}`)
-                            .join(', ') || '—'}
-                        </td>
-                        <td className="px-4 py-3 text-right text-white font-medium">
-                          RM {order.total_myr.toLocaleString()}
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <select
-                            value={order.status}
-                            onChange={e => handleStatusChange(order, e.target.value as OrderStatus)}
-                            className="bg-pharma-900 border border-pharma-700 rounded-btn px-3 py-1.5 text-xs text-white focus:border-accent-500 focus:outline-none cursor-pointer"
-                          >
-                            {ORDER_STATUS_FLOW.map(s => (
-                              <option key={s} value={s}>
-                                {ORDER_STATUS_LABELS[s]}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                      </tr>
+              /* ── Seller cards grid ── */
+              <div>
+                {ordersLoading ? (
+                  <div className="p-12 text-center text-pharma-400">Loading orders...</div>
+                ) : sellerOrderSummaries.length === 0 ? (
+                  <div className="p-12 text-center text-pharma-400">No sellers found.</div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {sellerOrderSummaries.map(({ seller, summary, total }) => (
+                      <button
+                        key={seller.id}
+                        onClick={() => setOrderFilterSellerCode(seller.seller_code)}
+                        className="text-left rounded-card bg-pharma-850/50 border border-pharma-700/50 p-5 hover:border-accent-500/50 hover:bg-pharma-800/30 transition-all cursor-pointer"
+                      >
+                        {/* Seller name + code */}
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="text-white font-semibold text-lg truncate">
+                            {seller.name}
+                          </h3>
+                          <span className="text-xs font-mono text-pharma-400 flex-shrink-0 ml-2">
+                            {seller.seller_code}
+                          </span>
+                        </div>
+
+                        {/* Order summary pills */}
+                        {total > 0 ? (
+                          <div className="flex flex-wrap gap-1.5">
+                            {ORDER_STATUS_FLOW.map(status => {
+                              const count = summary[status]
+                              if (count === 0) return null
+                              return (
+                                <span
+                                  key={status}
+                                  className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium border ${STATUS_COLORS[status]}`}
+                                >
+                                  {ORDER_STATUS_LABELS[status]}: {count}
+                                </span>
+                              )
+                            })}
+                          </div>
+                        ) : (
+                          <p className="text-pharma-500 text-sm">No orders yet</p>
+                        )}
+
+                        {/* Total */}
+                        {total > 0 && (
+                          <p className="text-pharma-400 text-xs mt-3">
+                            {total} order{total !== 1 ? 's' : ''} total
+                          </p>
+                        )}
+                      </button>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -317,6 +377,7 @@ export default function AdminDashboardPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-pharma-700/50 bg-pharma-900/40">
+                      <th className="text-left text-pharma-400 font-medium px-4 py-3">Name</th>
                       <th className="text-left text-pharma-400 font-medium px-4 py-3">Email</th>
                       <th className="text-left text-pharma-400 font-medium px-4 py-3">Code</th>
                       <th className="text-left text-pharma-400 font-medium px-4 py-3">Phone</th>
@@ -328,8 +389,15 @@ export default function AdminDashboardPage() {
                   </thead>
                   <tbody>
                     {sellers.map(seller => (
-                      <tr key={seller.id} className="border-b border-pharma-700/30 hover:bg-pharma-800/30 transition-colors">
-                        <td className="px-4 py-3 text-white">
+                      <tr
+                        key={seller.id}
+                        onClick={() => setSelectedSeller(seller)}
+                        className="border-b border-pharma-700/30 hover:bg-pharma-800/30 transition-colors cursor-pointer"
+                      >
+                        <td className="px-4 py-3 text-white font-medium">
+                          {seller.name || '—'}
+                        </td>
+                        <td className="px-4 py-3 text-pharma-300 text-xs">
                           {seller.email}
                         </td>
                         <td className="px-4 py-3 text-pharma-300 font-mono text-xs">
@@ -338,21 +406,21 @@ export default function AdminDashboardPage() {
                         <td className="px-4 py-3 text-pharma-300 text-xs">
                           {seller.phone || '—'}
                         </td>
-                        <td className="px-4 py-3 text-center">
+                        <td className="px-4 py-3 text-center" onClick={e => e.stopPropagation()}>
                           <DiscountEditor
                             value={seller.discount_pct}
                             saving={savingSellerId === seller.id}
                             onSave={val => handleSellerConfigSave(seller, 'discount_pct', val)}
                           />
                         </td>
-                        <td className="px-4 py-3 text-center">
+                        <td className="px-4 py-3 text-center" onClick={e => e.stopPropagation()}>
                           <CommissionEditor
                             value={seller.commission_pct}
                             saving={savingSellerId === seller.id}
                             onSave={val => handleSellerConfigSave(seller, 'commission_pct', val)}
                           />
                         </td>
-                        <td className="px-4 py-3 text-center">
+                        <td className="px-4 py-3 text-center" onClick={e => e.stopPropagation()}>
                           <button
                             onClick={() => handleActiveToggle(seller)}
                             disabled={savingSellerId === seller.id}
@@ -367,7 +435,7 @@ export default function AdminDashboardPage() {
                             />
                           </button>
                         </td>
-                        <td className="px-4 py-3 text-center">
+                        <td className="px-4 py-3 text-center" onClick={e => e.stopPropagation()}>
                           {savingSellerId === seller.id && (
                             <span className="text-xs text-pharma-400">Saving...</span>
                           )}
@@ -504,6 +572,19 @@ export default function AdminDashboardPage() {
         )}
       </div>
 
+      {/* ─── Seller Detail Modal ─── */}
+      {selectedSeller && (
+        <SellerDetailModal
+          seller={selectedSeller}
+          orders={orders.filter(o => o.seller_code === selectedSeller.seller_code)}
+          onClose={() => setSelectedSeller(null)}
+          onStatusChange={handleStatusChange}
+          onConfigSave={handleSellerConfigSave}
+          onActiveToggle={handleActiveToggle}
+          savingSellerId={savingSellerId}
+        />
+      )}
+
       {/* ─── Product Edit Modal ─── */}
       {editModalOpen && (
         <ProductEditModal
@@ -521,6 +602,247 @@ export default function AdminDashboardPage() {
           onClose={() => setEditModalOpen(false)}
         />
       )}
+    </div>
+  )
+}
+
+// ─── Orders Table (reusable) ───
+
+function OrdersTable({
+  orders,
+  loading,
+  onStatusChange,
+  showSellerCode,
+}: {
+  orders: PharmaOrder[]
+  loading: boolean
+  onStatusChange: (order: PharmaOrder, newStatus: OrderStatus) => void
+  showSellerCode: boolean
+}) {
+  if (loading) {
+    return <div className="p-12 text-center text-pharma-400">Loading orders...</div>
+  }
+  if (orders.length === 0) {
+    return <div className="p-12 text-center text-pharma-400">No orders found for this seller.</div>
+  }
+
+  return (
+    <div className="rounded-card bg-pharma-850/50 border border-pharma-700/50 overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-pharma-700/50 bg-pharma-900/40">
+              <th className="text-left text-pharma-400 font-medium px-4 py-3">Order ID</th>
+              {showSellerCode && (
+                <th className="text-left text-pharma-400 font-medium px-4 py-3">Seller Code</th>
+              )}
+              <th className="text-left text-pharma-400 font-medium px-4 py-3">Patient</th>
+              <th className="text-left text-pharma-400 font-medium px-4 py-3">Email</th>
+              <th className="text-left text-pharma-400 font-medium px-4 py-3">Items</th>
+              <th className="text-right text-pharma-400 font-medium px-4 py-3">Total</th>
+              <th className="text-center text-pharma-400 font-medium px-4 py-3">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {orders.map(order => (
+              <tr key={order.id} className="border-b border-pharma-700/30 hover:bg-pharma-800/30 transition-colors">
+                <td className="px-4 py-3 text-white font-mono text-xs">
+                  {order.id.slice(0, 8)}
+                </td>
+                {showSellerCode && (
+                  <td className="px-4 py-3 text-pharma-300 text-xs font-mono">
+                    {order.seller_code || '—'}
+                  </td>
+                )}
+                <td className="px-4 py-3 text-white">
+                  {order.patient_name}
+                </td>
+                <td className="px-4 py-3 text-pharma-300 text-xs">
+                  {order.patient_email}
+                </td>
+                <td className="px-4 py-3 text-pharma-300 text-xs">
+                  {(order.items as Array<{ name: string; quantity: number }>)
+                    ?.map(i => `${i.name} ×${i.quantity}`)
+                    .join(', ') || '—'}
+                </td>
+                <td className="px-4 py-3 text-right text-white font-medium">
+                  RM {order.total_myr.toLocaleString()}
+                </td>
+                <td className="px-4 py-3 text-center">
+                  <select
+                    value={order.status}
+                    onChange={e => onStatusChange(order, e.target.value as OrderStatus)}
+                    className="bg-pharma-900 border border-pharma-700 rounded-btn px-3 py-1.5 text-xs text-white focus:border-accent-500 focus:outline-none cursor-pointer"
+                  >
+                    {ORDER_STATUS_FLOW.map(s => (
+                      <option key={s} value={s}>
+                        {ORDER_STATUS_LABELS[s]}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+// ─── Seller Detail Modal ───
+
+function SellerDetailModal({
+  seller,
+  orders,
+  onClose,
+  onStatusChange,
+  onConfigSave,
+  onActiveToggle,
+  savingSellerId,
+}: {
+  seller: Seller
+  orders: PharmaOrder[]
+  onClose: () => void
+  onStatusChange: (order: PharmaOrder, newStatus: OrderStatus) => void
+  onConfigSave: (seller: Seller, field: 'discount_pct' | 'commission_pct', value: number) => void
+  onActiveToggle: (seller: Seller) => void
+  savingSellerId: string | null
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+
+      {/* Modal */}
+      <div className="relative w-full max-w-3xl max-h-[85vh] overflow-y-auto rounded-card bg-pharma-900 border border-pharma-700 shadow-2xl">
+        {/* Header */}
+        <div className="sticky top-0 z-10 flex items-center justify-between p-6 border-b border-pharma-700/50 bg-pharma-900/95 backdrop-blur-sm rounded-t-card">
+          <div>
+            <h2 className="text-xl font-bold text-white">{seller.name}</h2>
+            <p className="text-xs text-pharma-400 font-mono mt-0.5">{seller.seller_code}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-pharma-800 hover:bg-pharma-700 border border-pharma-700 text-pharma-400 hover:text-white transition-colors text-lg leading-none"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-6 space-y-6">
+          {/* Seller Details */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <DetailItem label="Email" value={seller.email} />
+            <DetailItem label="Phone" value={seller.phone || '—'} />
+            <DetailItem label="Address" value={seller.address || '—'} />
+            <DetailItem label="Bank Name" value={seller.bank_name || '—'} />
+            <DetailItem label="Bank Account" value={seller.bank_acc_number || '—'} mono />
+            <DetailItem label="Status" value={seller.is_active ? 'Active' : 'Inactive'} />
+
+            {/* Discount + Commission inline editors */}
+            <div className="bg-pharma-850/50 rounded-btn p-4 border border-pharma-700/50">
+              <p className="text-xs text-pharma-400 uppercase tracking-wider mb-2">Discount %</p>
+              <DiscountEditor
+                value={seller.discount_pct}
+                saving={savingSellerId === seller.id}
+                onSave={val => onConfigSave(seller, 'discount_pct', val)}
+              />
+            </div>
+            <div className="bg-pharma-850/50 rounded-btn p-4 border border-pharma-700/50">
+              <p className="text-xs text-pharma-400 uppercase tracking-wider mb-2">Commission %</p>
+              <CommissionEditor
+                value={seller.commission_pct}
+                saving={savingSellerId === seller.id}
+                onSave={val => onConfigSave(seller, 'commission_pct', val)}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => onActiveToggle(seller)}
+              disabled={savingSellerId === seller.id}
+              className={`px-4 py-2 rounded-btn text-sm font-medium border transition-colors disabled:opacity-50 ${
+                seller.is_active
+                  ? 'bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20'
+                  : 'bg-green-500/10 border-green-500/30 text-green-400 hover:bg-green-500/20'
+              }`}
+            >
+              {seller.is_active ? 'Deactivate Seller' : 'Activate Seller'}
+            </button>
+            {savingSellerId === seller.id && (
+              <span className="text-xs text-pharma-400">Saving...</span>
+            )}
+          </div>
+
+          {/* Order Summary */}
+          <div className="border-t border-pharma-700/50 pt-6">
+            <h3 className="text-lg font-semibold text-white mb-4">
+              Orders ({orders.length})
+            </h3>
+            {orders.length === 0 ? (
+              <p className="text-pharma-500 text-sm">No orders from this seller yet.</p>
+            ) : (
+              <div className="overflow-x-auto rounded-card border border-pharma-700/50">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-pharma-700/50 bg-pharma-850/50">
+                      <th className="text-left text-pharma-400 font-medium px-4 py-2.5">Order ID</th>
+                      <th className="text-left text-pharma-400 font-medium px-4 py-2.5">Patient</th>
+                      <th className="text-left text-pharma-400 font-medium px-4 py-2.5">Items</th>
+                      <th className="text-right text-pharma-400 font-medium px-4 py-2.5">Total</th>
+                      <th className="text-center text-pharma-400 font-medium px-4 py-2.5">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {orders.map(order => {
+                      const items = (order.items || []) as Array<{ name: string; quantity: number }>
+                      return (
+                        <tr key={order.id} className="border-b border-pharma-700/30 hover:bg-pharma-800/30 transition-colors">
+                          <td className="px-4 py-2.5 text-white font-mono text-xs">
+                            {order.id.slice(0, 8)}
+                          </td>
+                          <td className="px-4 py-2.5 text-white text-sm">
+                            {order.patient_name}
+                          </td>
+                          <td className="px-4 py-2.5 text-pharma-300 text-xs">
+                            {items.map(i => `${i.name} ×${i.quantity}`).join(', ') || '—'}
+                          </td>
+                          <td className="px-4 py-2.5 text-right text-white font-medium">
+                            RM {order.total_myr.toLocaleString()}
+                          </td>
+                          <td className="px-4 py-2.5 text-center">
+                            <select
+                              value={order.status}
+                              onChange={e => onStatusChange(order, e.target.value as OrderStatus)}
+                              className="bg-pharma-900 border border-pharma-700 rounded-btn px-2 py-1 text-xs text-white focus:border-accent-500 focus:outline-none cursor-pointer"
+                            >
+                              {ORDER_STATUS_FLOW.map(s => (
+                                <option key={s} value={s}>{ORDER_STATUS_LABELS[s]}</option>
+                              ))}
+                            </select>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DetailItem({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div className="bg-pharma-850/50 rounded-btn p-4 border border-pharma-700/50">
+      <p className="text-xs text-pharma-400 uppercase tracking-wider mb-1">{label}</p>
+      <p className={`text-sm text-white ${mono ? 'font-mono' : ''}`}>{value}</p>
     </div>
   )
 }

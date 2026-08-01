@@ -212,12 +212,22 @@ export default function SellerDashboardPage() {
           <p className="text-pharma-400 text-sm mb-4">
             Share your unique link — patients get <span className="text-green-400 font-semibold">{seller.discount_pct}% off</span> and you earn <span className="text-green-400 font-semibold">{seller.commission_pct}% commission</span>.
           </p>
+
+          {/* Preview of the copy text */}
+          <div className="bg-pharma-900/50 border border-pharma-700/50 rounded p-3 mb-4">
+            <p className="text-xs text-pharma-400 uppercase tracking-wider mb-1">Copy Preview</p>
+            <p className="text-xs text-pharma-300 leading-relaxed">
+              Checkout <span className="text-green-400 font-semibold">{seller.discount_pct}% off</span> high precision peptides — ATHERYX & ELYSION: Tirzepatide and Retatrutide EziPen. Click the link to explore your accurate dosing!
+            </p>
+          </div>
+
           <div className="flex flex-col sm:flex-row gap-3">
             {/* Copy Link */}
             <button
               onClick={async () => {
                 const link = `https://pharma.zuso-boltz-agentic.app/?code=${seller.seller_code}`
-                await navigator.clipboard.writeText(link)
+                const adText = `Checkout ${seller.discount_pct}% off high precision peptides — ATHERYX & ELYSION: Tirzepatide and Retatrutide EziPen. Click the link to explore your accurate dosing!\n\n${link}`
+                await navigator.clipboard.writeText(adText)
                 setCopied('link')
                 setTimeout(() => setCopied(null), 2000)
               }}
@@ -238,7 +248,8 @@ export default function SellerDashboardPage() {
             {/* Copy Code */}
             <button
               onClick={async () => {
-                await navigator.clipboard.writeText(seller.seller_code)
+                const adText = `Checkout ${seller.discount_pct}% off high precision peptides — ATHERYX & ELYSION: Tirzepatide and Retatrutide EziPen. Click the link to explore your accurate dosing!\n\nUse code: ${seller.seller_code} at https://pharma.zuso-boltz-agentic.app/`
+                await navigator.clipboard.writeText(adText)
                 setCopied('code')
                 setTimeout(() => setCopied(null), 2000)
               }}
@@ -252,7 +263,7 @@ export default function SellerDashboardPage() {
               ) : (
                 <>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                  Copy Code: {seller.seller_code}
+                  Copy Code
                 </>
               )}
             </button>
