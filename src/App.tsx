@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Layout from './components/layout/Layout'
 import HomePage from './pages/HomePage'
 import ProductsPage from './pages/ProductsPage'
@@ -21,6 +21,7 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/product/:slug" element={<ProductDetailPage />} />
+        <Route path="/product" element={<ProductRedirect />} />
         <Route path="/forecast" element={<WeightLossForecastPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout/success" element={<CheckoutSuccess />} />
@@ -35,4 +36,10 @@ export default function App() {
       <Route path="/admin/login" element={<AdminLoginPage />} />
     </Routes>
   )
+}
+
+/** Redirect /product?code=... → /products?code=... (preserves query params) */
+function ProductRedirect() {
+  const location = useLocation()
+  return <Navigate to={`/products${location.search}`} replace />
 }
