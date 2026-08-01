@@ -642,3 +642,22 @@ export async function notifyAllNewOrder(order: PharmaOrder, sellerEmail: string)
     notifyAdminNewOrder(order),
   ])
 }
+
+// ─── Pre-Screening Submission ────────────────────────────
+
+export interface PreScreeningData {
+  age?: number
+  height_cm?: number
+  weight_kg?: number
+  email?: string
+  co_morbids?: string[]
+  co_morbids_other?: string
+  family_thyroid?: boolean
+  steps_per_day?: number
+  seller_code?: string
+}
+
+export async function submitPreScreening(data: PreScreeningData): Promise<boolean> {
+  const { error } = await supabase.from('pre_screening').insert(data)
+  return !error
+}
