@@ -3,6 +3,7 @@ import Navbar from './Navbar'
 import Footer from './Footer'
 import CartDrawer from '../cart/CartDrawer'
 import DiscountFab from '../discount/DiscountFab'
+import WhatsAppFab from '../WhatsAppFab'
 
 export default function Layout() {
   return (
@@ -14,6 +15,7 @@ export default function Layout() {
       <Footer />
       <CartDrawer />
       <DiscountFab />
+      <WhatsAppFab />
     </div>
   )
 }
