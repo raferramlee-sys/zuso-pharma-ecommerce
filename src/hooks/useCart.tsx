@@ -53,6 +53,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         dosage_mg: product.dosage_mg,
         price_myr: product.price_myr,
         quantity: qty,
+        image: product.images?.[0],
       }]
     })
 

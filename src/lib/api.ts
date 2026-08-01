@@ -140,8 +140,11 @@ function buildLineItems(items: CartItem[], discountPct: number, discountMyr: num
 
 /** Render a 48x48 product thumbnail for email */
 function buildItemThumb(it: CartItem): string {
-  if (it.image) {
-    return `<img src="${esc(it.image)}" alt="${esc(it.name)}" width="48" height="48" style="width:48px;height:48px;border-radius:8px;object-fit:cover;display:block;border:1px solid ${T.border}" />`
+  const imgUrl = it.image
+    ? (it.image.startsWith('http') ? it.image : `https://pharma.zuso-boltz-agentic.app${it.image.startsWith('/') ? '' : '/'}${it.image}`)
+    : null
+  if (imgUrl) {
+    return `<img src="${esc(imgUrl)}" alt="${esc(it.name)}" width="48" height="48" style="width:48px;height:48px;border-radius:8px;object-fit:cover;display:block;border:1px solid ${T.border}" />`
   }
   // Fallback: brand-colored circle with first letter
   const isAth = it.brand === 'atheryx'
@@ -502,8 +505,22 @@ export async function notifyPatientStatusChange(order: PharmaOrder, oldStatus: O
     )}
     ${sectionBody('Your Order', `
       ${buildCompactItems(items)}
-      <div style="margin-top:16px;padding:12px 0 0;border-top:1px solid ${T.border};text-align:right;font-size:15px;color:${T.white}">
-        Total: <span style="color:${T.accent};font-weight:bold;font-family:${T.mono}">${mn(order.total_myr)}</span>
+      <div style="margin-top:16px;padding:12px 0 0;border-top:1px solid ${T.border}">
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td align="right" style="padding:2px;color:${T.muted};font-size:13px">Subtotal:</td>
+            <td align="right" width="130" style="padding:2px;color:${T.muted};font-size:13px">${mn(order.subtotal_myr)}</td>
+          </tr>
+          ${order.discount_pct > 0 ? `
+          <tr>
+            <td align="right" style="padding:2px;color:${T.green};font-size:13px">Discount (${order.discount_pct}%):</td>
+            <td align="right" style="padding:2px;color:${T.green};font-size:13px">−${mn(order.discount_myr)}</td>
+          </tr>` : ''}
+          <tr>
+            <td align="right" style="padding:6px 2px 2px;color:${T.white};font-size:15px;font-weight:bold">Total:</td>
+            <td align="right" style="padding:6px 2px 2px;color:${T.accent};font-size:15px;font-weight:bold;font-family:${T.mono}">${mn(order.total_myr)}</td>
+          </tr>
+        </table>
       </div>
     `)}
     ${sectionBody('Status Timeline', `
