@@ -715,23 +715,39 @@ export default function AdminDashboardPage() {
                             </span>
                           </td>
                           <td className="px-4 py-3 text-center">
-                            <select
-                              value={bo.status}
-                              disabled={updatingBulkOrderId === bo.id || bo.status === 'cancelled'}
-                              onChange={(e) =>
-                                handleBulkOrderStatusChange(bo, e.target.value as BulkOrderStatus)
-                              }
-                              className="bg-pharma-900 border border-pharma-700 rounded-btn px-3 py-1.5 text-xs text-white cursor-pointer focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {BULK_ORDER_STATUS_FLOW.map((s) => (
-                                <option key={s} value={s}>
-                                  {BULK_ORDER_STATUS_LABELS[s]}
-                                </option>
-                              ))}
-                            </select>
-                            {updatingBulkOrderId === bo.id && (
-                              <span className="ml-2 inline-block w-4 h-4 border-2 border-accent-500 border-t-transparent rounded-full animate-spin align-middle" />
-                            )}
+                            <div className="flex items-center justify-center gap-2">
+                              <select
+                                value={bo.status}
+                                disabled={updatingBulkOrderId === bo.id || bo.status === 'cancelled'}
+                                onChange={(e) =>
+                                  handleBulkOrderStatusChange(bo, e.target.value as BulkOrderStatus)
+                                }
+                                className="bg-pharma-900 border border-pharma-700 rounded-btn px-3 py-1.5 text-xs text-white cursor-pointer focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {BULK_ORDER_STATUS_FLOW.map((s) => (
+                                  <option key={s} value={s}>
+                                    {BULK_ORDER_STATUS_LABELS[s]}
+                                  </option>
+                                ))}
+                              </select>
+                              {bo.status !== 'cancelled' && (
+                                <button
+                                  onClick={() => {
+                                    if (window.confirm(`Cancel bulk order #${bo.id.slice(0, 8)}? This cannot be undone.`)) {
+                                      handleBulkOrderStatusChange(bo, 'cancelled')
+                                    }
+                                  }}
+                                  disabled={updatingBulkOrderId === bo.id}
+                                  className="px-2 py-1 text-xs font-medium text-red-400 border border-red-500/30 rounded-btn hover:bg-red-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                  title="Cancel order"
+                                >
+                                  ✕
+                                </button>
+                              )}
+                              {updatingBulkOrderId === bo.id && (
+                                <span className="inline-block w-4 h-4 border-2 border-accent-500 border-t-transparent rounded-full animate-spin align-middle" />
+                              )}
+                            </div>
                           </td>
                         </tr>
                       )
