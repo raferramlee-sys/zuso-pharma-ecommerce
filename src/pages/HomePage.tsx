@@ -2,6 +2,7 @@ import { Helmet } from 'react-helmet-async'
 import { Link } from 'react-router-dom'
 import { products } from '../lib/products'
 import ProductCard from '../components/product/ProductCard'
+import TestimonialCarousel from '../components/home/TestimonialCarousel'
 
 export default function HomePage() {
   const canonicalUrl = 'https://pharma.zuso-boltz-agentic.app'
@@ -237,6 +238,9 @@ export default function HomePage() {
             </Link>
           </div>
         </section>
+
+        {/* Testimonial Carousel */}
+        <TestimonialCarousel />
 
         {/* CTA Section */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
