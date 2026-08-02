@@ -118,3 +118,47 @@ export const ORDER_STATUS_FLOW: OrderStatus[] = [
   'delivery',
   'delivered',
 ]
+
+// ─── Bulk Order Types ─────────────────────────────────
+
+export type BulkOrderStatus = 'pending_payment' | 'paid' | 'preparing' | 'delivered' | 'cancelled'
+
+export interface BulkOrderItem {
+  product_id: string
+  brand: string
+  name: string
+  peptide: string
+  dosage_mg: number
+  quantity: number
+  unit_retail_myr: number
+  unit_cost_myr: number
+}
+
+export interface BulkOrder {
+  id: string
+  seller_id: string
+  seller_code: string
+  items: BulkOrderItem[]
+  total_cost_myr: number
+  total_retail_myr: number
+  status: BulkOrderStatus
+  payment_receipt_url: string | null
+  admin_notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export const BULK_ORDER_STATUS_LABELS: Record<BulkOrderStatus, string> = {
+  pending_payment: 'Pending Payment',
+  paid: 'Paid',
+  preparing: 'Preparing',
+  delivered: 'Delivered',
+  cancelled: 'Cancelled',
+}
+
+export const BULK_ORDER_STATUS_FLOW: BulkOrderStatus[] = [
+  'pending_payment',
+  'paid',
+  'preparing',
+  'delivered',
+]

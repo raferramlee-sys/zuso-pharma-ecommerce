@@ -5,7 +5,7 @@
  * #7c3aed (purple) accent, #24243a borders, Arial + Courier New typography.
  */
 import { supabase } from './supabase'
-import type { PharmaOrder, Seller, CartItem, OrderStatus, Product } from '../types'
+import type { PharmaOrder, Seller, CartItem, OrderStatus, Product, BulkOrder, BulkOrderItem, BulkOrderStatus } from '../types'
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 
@@ -641,6 +641,217 @@ export async function notifyAllNewOrder(order: PharmaOrder, sellerEmail: string)
     notifySellerNewOrder(order, sellerEmail),
     notifyAdminNewOrder(order),
   ])
+}
+
+// ─── Bulk Order CRUD ────────────────────────────────────
+
+export async function submitBulkOrder(params: {
+  seller_id: string
+  seller_code: string
+  items: BulkOrderItem[]
+  total_cost_myr: number
+  total_retail_myr: number
+}): Promise<BulkOrder | { error: string }> {
+  const { data, error } = await supabase
+    .from('bulk_orders')
+    .insert({
+      seller_id: params.seller_id,
+      seller_code: params.seller_code,
+      items: params.items,
+      total_cost_myr: params.total_cost_myr,
+      total_retail_myr: params.total_retail_myr,
+      status: 'pending_payment',
+    })
+    .select()
+    .single()
+
+  if (error) return { error: error.message }
+  return data as BulkOrder
+}
+
+export async function getBulkOrdersBySeller(sellerId: string): Promise<BulkOrder[]> {
+  const { data } = await supabase
+    .from('bulk_orders')
+    .select('*')
+    .eq('seller_id', sellerId)
+    .order('created_at', { ascending: false })
+  return (data || []) as BulkOrder[]
+}
+
+export async function getAllBulkOrders(): Promise<BulkOrder[]> {
+  const { data } = await supabase
+    .from('bulk_orders')
+    .select('*')
+    .order('created_at', { ascending: false })
+  return (data || []) as BulkOrder[]
+}
+
+export async function updateBulkOrderStatus(orderId: string, status: BulkOrderStatus): Promise<boolean> {
+  const { error } = await supabase
+    .from('bulk_orders')
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq('id', orderId)
+  return !error
+}
+
+export async function decrementProductStock(productId: string, quantity: number): Promise<boolean> {
+  // Fetch current stock first
+  const { data: product } = await supabase
+    .from('products')
+    .select('stock')
+    .eq('id', productId)
+    .single()
+
+  if (!product) return false
+  const newStock = Math.max(0, (product.stock || 0) - quantity)
+
+  const { error } = await supabase
+    .from('products')
+    .update({ stock: newStock, updated_at: new Date().toISOString() })
+    .eq('id', productId)
+
+  return !error
+}
+
+// ─── Bulk Order Notifications ───────────────────────────
+
+/** 8. Seller bulk order invoice */
+export async function notifySellerBulkOrderInvoice(order: BulkOrder, sellerEmail: string) {
+  const items = order.items as BulkOrderItem[]
+
+  const itemsHtml = items
+    .map(
+      (it) => `
+    <tr style="border-bottom:1px solid ${T.border}">
+      <td style="padding:10px 8px;color:${T.text};font-size:13px">
+        <div style="font-weight:600;margin-bottom:2px">${esc(it.name)}</div>
+        <div style="color:${T.muted};font-size:11px">${esc(it.peptide)} — ${it.dosage_mg}mg</div>
+      </td>
+      <td style="padding:10px 8px;color:${T.text};text-align:center;font-size:13px">${it.quantity}x</td>
+      <td style="padding:10px 8px;color:${T.muted};text-align:right;font-size:12px;text-decoration:line-through">${mn(it.unit_retail_myr)}</td>
+      <td style="padding:10px 8px;color:${T.green};text-align:right;font-family:${T.mono};font-size:14px;font-weight:600">${mn(it.unit_cost_myr)}</td>
+      <td style="padding:10px 8px;color:${T.white};text-align:right;font-family:${T.mono};font-size:14px;font-weight:600">${mn(it.unit_cost_myr * it.quantity)}</td>
+    </tr>`,
+    )
+    .join('')
+
+  const body = `
+    ${sectionHeader('PHARMA.zuso', 'BULK ORDER INVOICE')}
+    ${sectionHero(
+      'Invoice',
+      'Bulk Pen Order',
+      `Order <span style="font-family:${T.mono};color:${T.text}">#${esc(order.id.slice(0, 8))}</span>`,
+      mn(order.total_cost_myr),
+      'Total Cost Price',
+    )}
+    ${sectionBody('Order Items', `
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <thead>
+          <tr style="border-bottom:1px solid #2f2f48">
+            <th align="left" style="padding:8px;font-size:11px;letter-spacing:1px;color:${T.dim};text-transform:uppercase">Product</th>
+            <th align="center" style="padding:8px;font-size:11px;letter-spacing:1px;color:${T.dim};text-transform:uppercase">Qty</th>
+            <th align="right" style="padding:8px;font-size:11px;letter-spacing:1px;color:${T.dim};text-transform:uppercase">Retail</th>
+            <th align="right" style="padding:8px;font-size:11px;letter-spacing:1px;color:${T.dim};text-transform:uppercase">Cost/Unit</th>
+            <th align="right" style="padding:8px;font-size:11px;letter-spacing:1px;color:${T.dim};text-transform:uppercase">Total</th>
+          </tr>
+        </thead>
+        <tbody>${itemsHtml}</tbody>
+      </table>
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px">
+        <tr>
+          <td align="right" style="padding:2px;color:${T.muted};font-size:13px">Retail Value:</td>
+          <td align="right" width="130" style="padding:2px;color:${T.muted};font-size:13px;text-decoration:line-through">${mn(order.total_retail_myr)}</td>
+        </tr>
+        <tr>
+          <td align="right" style="padding:4px 2px;color:${T.green};font-size:14px;font-weight:bold">Cost Price:</td>
+          <td align="right" style="padding:4px 2px;color:${T.green};font-size:14px;font-weight:bold">${mn(order.total_cost_myr)}</td>
+        </tr>
+        <tr>
+          <td align="right" style="padding:2px;color:${T.muted};font-size:12px">You Save:</td>
+          <td align="right" style="padding:2px;color:${T.accent};font-size:12px">${mn(order.total_retail_myr - order.total_cost_myr)}</td>
+        </tr>
+      </table>
+    `)}
+    ${sectionBody('Payment Method', `
+      <div style="font-size:13px;color:${T.muted}">
+        <strong style="color:${T.accent};text-transform:uppercase;letter-spacing:1px">Bank Transfer</strong><br>
+        Bank: <strong style="color:${T.text}">Maybank</strong><br>
+        Account: <strong style="color:${T.text}">LEVERAGE MEDICAL SDN BHD</strong><br>
+        No: <strong style="color:${T.text};font-family:${T.mono}">556011164525</strong>
+      </div>
+      <div style="margin-top:12px;padding:12px;background:${T.accentSoft};border-radius:${T.rSmall};font-size:12px;color:${T.muted}">
+        ⚠️ Stock will be prepared after payment is confirmed. Reply to this email with your receipt or questions.
+      </div>
+    `)}
+    ${sectionFooter()}
+  `
+
+  await sendEmailNotification({
+    to: sellerEmail,
+    subject: `Bulk Order Invoice #${order.id.slice(0, 8)} — ${mn(order.total_cost_myr)}`,
+    html: buildEmailShell(body),
+  })
+}
+
+/** 9. Admin bulk order — delivery task */
+export async function notifyAdminBulkOrder(order: BulkOrder, sellerEmail: string) {
+  const items = order.items as BulkOrderItem[]
+
+  const itemsHtml = items
+    .map(
+      (it) => `
+    <tr style="border-bottom:1px solid ${T.border}">
+      <td style="padding:10px 8px;color:${T.text};font-size:13px">
+        <div style="font-weight:600;margin-bottom:2px">${esc(it.name)}</div>
+        <div style="color:${T.muted};font-size:11px">${esc(it.peptide)} — ${it.dosage_mg}mg</div>
+      </td>
+      <td style="padding:10px 8px;color:${T.text};text-align:center;font-size:13px">${it.quantity}x</td>
+      <td style="padding:10px 8px;color:${T.white};text-align:right;font-family:${T.mono};font-size:13px">${mn(it.unit_cost_myr)}</td>
+    </tr>`,
+    )
+    .join('')
+
+  const body = `
+    ${sectionHeader('PHARMA.zuso', 'ADMIN — BULK ORDER')}
+    ${sectionHero(
+      'Delivery Task',
+      esc(sellerEmail),
+      `Bulk Order <span style="font-family:${T.mono};color:${T.text}">#${esc(order.id.slice(0, 8))}</span> · Code: <span style="font-family:${T.mono};color:${T.accent}">${esc(order.seller_code)}</span>`,
+      mn(order.total_cost_myr),
+      'Total Cost Price',
+      { text: 'Manage Bulk Orders', url: 'https://pharma.zuso-boltz-agentic.app/admin' }
+    )}
+    ${sectionBody('Seller Info', `
+      <table cellpadding="4" cellspacing="0">
+        ${kvRow('Seller Code', `<span style="font-family:${T.mono}">${esc(order.seller_code)}</span>`)}
+        ${kvRow('Email', esc(sellerEmail))}
+        ${kvRow('Retail Value', mn(order.total_retail_myr))}
+        ${kvRow('Cost Price', mn(order.total_cost_myr))}
+      </table>
+    `)}
+    ${sectionBody('Items to Deliver', `
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <thead>
+          <tr style="border-bottom:1px solid #2f2f48">
+            <th align="left" style="padding:8px;font-size:11px;letter-spacing:1px;color:${T.dim};text-transform:uppercase">Product</th>
+            <th align="center" style="padding:8px;font-size:11px;letter-spacing:1px;color:${T.dim};text-transform:uppercase">Qty</th>
+            <th align="right" style="padding:8px;font-size:11px;letter-spacing:1px;color:${T.dim};text-transform:uppercase">Cost/Unit</th>
+          </tr>
+        </thead>
+        <tbody>${itemsHtml}</tbody>
+      </table>
+      <div style="margin-top:16px;padding:12px;background:${T.accentSoft};border-radius:${T.rSmall};font-size:12px;color:${T.muted}">
+        📦 Action required: Prepare and deliver stock to seller. Update status in admin dashboard when done.
+      </div>
+    `)}
+    ${sectionFooter()}
+  `
+
+  await sendEmailNotification({
+    to: 'admin@zusopharma.com',
+    subject: `[ADMIN] Bulk Order #${order.id.slice(0, 8)} — ${items.length} products, ${mn(order.total_cost_myr)}`,
+    html: buildEmailShell(body),
+  })
 }
 
 // ─── Pre-Screening Submission ────────────────────────────

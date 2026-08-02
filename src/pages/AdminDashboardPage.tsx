@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getSellerBySession, logoutSeller } from '../lib/auth'
-import { getAllOrders, getAllSellers, updateOrderStatus, updateSellerConfig, notifyPatientStatusChange, adminGetAllProducts, adminCreateProduct, adminUpdateProduct, adminDeleteProduct } from '../lib/api'
-import type { Seller, PharmaOrder, OrderStatus, Product } from '../types'
-import { ORDER_STATUS_LABELS, ORDER_STATUS_FLOW } from '../types'
+import { getAllOrders, getAllSellers, updateOrderStatus, updateSellerConfig, notifyPatientStatusChange, adminGetAllProducts, adminCreateProduct, adminUpdateProduct, adminDeleteProduct, getAllBulkOrders, updateBulkOrderStatus, decrementProductStock } from '../lib/api'
+import type { Seller, PharmaOrder, OrderStatus, Product, BulkOrder, BulkOrderStatus } from '../types'
+import { ORDER_STATUS_LABELS, ORDER_STATUS_FLOW, BULK_ORDER_STATUS_LABELS, BULK_ORDER_STATUS_FLOW } from '../types'
 import ProductEditModal from '../components/admin/ProductEditModal'
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
@@ -14,6 +14,14 @@ const STATUS_COLORS: Record<OrderStatus, string> = {
   delivered: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
 }
 
+const BULK_STATUS_COLORS: Record<BulkOrderStatus, string> = {
+  pending_payment: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+  paid: 'bg-green-500/20 text-green-400 border-green-500/30',
+  preparing: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  delivered: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  cancelled: 'bg-red-500/20 text-red-400 border-red-500/30',
+}
+
 export default function AdminDashboardPage() {
   const navigate = useNavigate()
 
@@ -22,7 +30,7 @@ export default function AdminDashboardPage() {
   const [authLoading, setAuthLoading] = useState(true)
 
   // Tab state
-  const [activeTab, setActiveTab] = useState<'orders' | 'sellers' | 'products'>('orders')
+  const [activeTab, setActiveTab] = useState<'orders' | 'sellers' | 'products' | 'bulk_orders'>('orders')
 
   // Orders state
   const [orders, setOrders] = useState<PharmaOrder[]>([])
@@ -39,6 +47,11 @@ export default function AdminDashboardPage() {
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | undefined>()
   const [editMode, setEditMode] = useState<'create' | 'edit'>('create')
+
+  // Bulk orders state
+  const [bulkOrders, setBulkOrders] = useState<BulkOrder[]>([])
+  const [bulkOrdersLoading, setBulkOrdersLoading] = useState(false)
+  const [updatingBulkOrderId, setUpdatingBulkOrderId] = useState<string | null>(null)
 
   // Seller detail modal state
   const [selectedSeller, setSelectedSeller] = useState<Seller | null>(null)
@@ -102,13 +115,25 @@ export default function AdminDashboardPage() {
     setProductsLoading(false)
   }, [])
 
+  const loadBulkOrders = useCallback(async () => {
+    setBulkOrdersLoading(true)
+    try {
+      const data = await getAllBulkOrders()
+      setBulkOrders(data)
+    } catch {
+      showMessage('error', 'Failed to load bulk orders')
+    }
+    setBulkOrdersLoading(false)
+  }, [])
+
   useEffect(() => {
     if (!authLoading && admin) {
       loadOrders()
       loadSellers()
       loadProducts()
+      loadBulkOrders()
     }
-  }, [authLoading, admin, loadOrders, loadSellers, loadProducts])
+  }, [authLoading, admin, loadOrders, loadSellers, loadProducts, loadBulkOrders])
 
   // ─── Helpers ───
   const showMessage = (type: 'success' | 'error', text: string) => {
@@ -143,6 +168,37 @@ export default function AdminDashboardPage() {
     }
 
     showMessage('success', `Order #${order.id.slice(0, 8)} → ${ORDER_STATUS_LABELS[newStatus]}`)
+  }
+
+  // ─── Bulk order status change ───
+  const handleBulkOrderStatusChange = async (bulkOrder: BulkOrder, newStatus: BulkOrderStatus) => {
+    if (newStatus === bulkOrder.status) return
+    setUpdatingBulkOrderId(bulkOrder.id)
+
+    const success = await updateBulkOrderStatus(bulkOrder.id, newStatus)
+    if (!success) {
+      showMessage('error', 'Failed to update bulk order status')
+      setUpdatingBulkOrderId(null)
+      return
+    }
+
+    // Update local state
+    setBulkOrders(prev =>
+      prev.map(bo => (bo.id === bulkOrder.id ? { ...bo, status: newStatus } : bo))
+    )
+
+    // Auto-decrement stock when delivered
+    if (newStatus === 'delivered') {
+      const items = bulkOrder.items as BulkOrderItem[]
+      for (const item of items) {
+        await decrementProductStock(item.product_id, item.quantity)
+      }
+      showMessage('success', `Bulk order delivered — stock decremented for ${items.length} products`)
+    } else {
+      showMessage('success', `Bulk order #${bulkOrder.id.slice(0, 8)} → ${BULK_ORDER_STATUS_LABELS[newStatus]}`)
+    }
+
+    setUpdatingBulkOrderId(null)
   }
 
   // ─── Seller config change ───
@@ -265,6 +321,16 @@ export default function AdminDashboardPage() {
             }`}
           >
             Products
+          </button>
+          <button
+            onClick={() => setActiveTab('bulk_orders')}
+            className={`px-6 py-3 text-sm font-semibold transition-colors border-b-2 -mb-px ${
+              activeTab === 'bulk_orders'
+                ? 'text-accent-400 border-accent-500'
+                : 'text-pharma-400 border-transparent hover:text-pharma-300'
+            }`}
+          >
+            Bulk Orders
           </button>
         </div>
 
@@ -568,6 +634,112 @@ export default function AdminDashboardPage() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* ─── TAB: Bulk Orders ─── */}
+        {activeTab === 'bulk_orders' && (
+          <div className="rounded-card bg-pharma-850/50 border border-pharma-700/50 overflow-hidden">
+            <div className="px-6 py-4 border-b border-pharma-700/50 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-white">
+                Bulk Orders ({bulkOrders.length})
+              </h2>
+              <button
+                onClick={loadBulkOrders}
+                className="px-3 py-1.5 rounded-btn bg-pharma-800 hover:bg-pharma-700 border border-pharma-700 text-pharma-300 text-xs transition-colors"
+              >
+                Refresh
+              </button>
+            </div>
+
+            {bulkOrdersLoading ? (
+              <div className="p-12 text-center text-pharma-400">Loading bulk orders...</div>
+            ) : bulkOrders.length === 0 ? (
+              <div className="p-12 text-center text-pharma-400">
+                <p className="mb-2">No bulk orders yet</p>
+                <p className="text-xs text-pharma-500">Seller stock replenishment orders will appear here</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-pharma-700/50 bg-pharma-900/40">
+                      <th className="text-left text-pharma-400 font-medium px-4 py-3">Order ID</th>
+                      <th className="text-left text-pharma-400 font-medium px-4 py-3">Seller Code</th>
+                      <th className="text-left text-pharma-400 font-medium px-4 py-3">Items</th>
+                      <th className="text-right text-pharma-400 font-medium px-4 py-3">Cost (RM)</th>
+                      <th className="text-right text-pharma-400 font-medium px-4 py-3">Retail (RM)</th>
+                      <th className="text-center text-pharma-400 font-medium px-4 py-3">Status</th>
+                      <th className="text-center text-pharma-400 font-medium px-4 py-3">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bulkOrders.map((bo) => {
+                      const items = (bo.items || []) as BulkOrderItem[]
+                      const itemSummary = items
+                        .map((i) => `${i.brand === 'atheryx' ? 'ATH' : 'ELY'} ${i.dosage_mg}mg ×${i.quantity}`)
+                        .join(', ')
+
+                      return (
+                        <tr key={bo.id} className="border-b border-pharma-700/30 hover:bg-pharma-800/30 transition-colors">
+                          <td className="px-4 py-3">
+                            <span className="text-xs font-mono text-pharma-300">
+                              {bo.id.slice(0, 8)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-xs font-mono text-accent-400">{bo.seller_code}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <p className="text-xs text-pharma-300 max-w-[250px] truncate" title={itemSummary}>
+                              {itemSummary || '—'}
+                            </p>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <span className="text-sm text-green-400 font-semibold font-mono">
+                              RM {bo.total_cost_myr.toLocaleString()}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <span className="text-xs text-pharma-500 line-through">
+                              RM {bo.total_retail_myr.toLocaleString()}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span
+                              className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium border ${
+                                BULK_STATUS_COLORS[bo.status]
+                              }`}
+                            >
+                              {BULK_ORDER_STATUS_LABELS[bo.status]}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <select
+                              value={bo.status}
+                              disabled={updatingBulkOrderId === bo.id || bo.status === 'cancelled'}
+                              onChange={(e) =>
+                                handleBulkOrderStatusChange(bo, e.target.value as BulkOrderStatus)
+                              }
+                              className="bg-pharma-900 border border-pharma-700 rounded-btn px-3 py-1.5 text-xs text-white cursor-pointer focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {BULK_ORDER_STATUS_FLOW.map((s) => (
+                                <option key={s} value={s}>
+                                  {BULK_ORDER_STATUS_LABELS[s]}
+                                </option>
+                              ))}
+                            </select>
+                            {updatingBulkOrderId === bo.id && (
+                              <span className="ml-2 inline-block w-4 h-4 border-2 border-accent-500 border-t-transparent rounded-full animate-spin align-middle" />
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
       </div>

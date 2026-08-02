@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import type { Seller, PharmaOrder, OrderStatus, CartItem } from '../types'
+import type { Seller, PharmaOrder, OrderStatus, CartItem, Product, BulkOrderItem } from '../types'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_FLOW } from '../types'
 import { getSellerBySession, logoutSeller } from '../lib/auth'
-import { getOrdersBySeller, updateOrderStatus, notifyPatientStatusChange } from '../lib/api'
+import { getOrdersBySeller, updateOrderStatus, notifyPatientStatusChange, submitBulkOrder, getBulkOrdersBySeller, notifySellerBulkOrderInvoice, notifyAdminBulkOrder } from '../lib/api'
+import { supabase } from '../lib/supabase'
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
   ordered: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
@@ -21,6 +22,12 @@ export default function SellerDashboardPage() {
   const [loading, setLoading] = useState(true)
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null)
   const [copied, setCopied] = useState<'link' | 'code' | null>(null)
+
+  // ── Bulk Order state ──────────────────────────────────
+  const [products, setProducts] = useState<Product[]>([])
+  const [bulkCart, setBulkCart] = useState<Record<string, number>>({})
+  const [bulkSubmitting, setBulkSubmitting] = useState(false)
+  const [bulkMessage, setBulkMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   // ── Auth check ────────────────────────────────────────
   useEffect(() => {
@@ -53,6 +60,107 @@ export default function SellerDashboardPage() {
     checkAuth()
     return () => { cancelled = true }
   }, [navigate])
+
+  // ── Load products for bulk order ─────────────────────
+  useEffect(() => {
+    if (!seller) return
+    let cancelled = false
+    async function loadProducts() {
+      const { data } = await supabase
+        .from('products')
+        .select('*')
+        .eq('active', true)
+      if (!cancelled) {
+        const sorted = [...(data || [])].sort((a: Product, b: Product) => {
+          if (a.brand !== b.brand) return a.brand === 'atheryx' ? -1 : 1
+          return (a.dosage_mg || 0) - (b.dosage_mg || 0)
+        })
+        setProducts(sorted)
+      }
+    }
+    loadProducts()
+    return () => { cancelled = true }
+  }, [seller])
+
+  // ── Bulk order helpers ──────────────────────────────
+  const costPrice = (retailPrice: number) =>
+    Math.round(retailPrice * (1 - ((seller?.discount_pct || 0) + (seller?.commission_pct || 0)) / 100))
+
+  const bulkCartTotal = Object.entries(bulkCart).reduce((sum, [pid, qty]) => {
+    const product = products.find(p => p.id === pid)
+    return sum + (product ? costPrice(product.price_myr) * qty : 0)
+  }, 0)
+
+  const bulkCartRetail = Object.entries(bulkCart).reduce((sum, [pid, qty]) => {
+    const product = products.find(p => p.id === pid)
+    return sum + (product ? product.price_myr * qty : 0)
+  }, 0)
+
+  const bulkCartItems = Object.entries(bulkCart).filter(([, qty]) => qty > 0)
+
+  const handleBulkQtyChange = (productId: string, delta: number) => {
+    setBulkCart(prev => {
+      const current = prev[productId] || 0
+      const next = Math.max(0, current + delta)
+      if (next === 0) {
+        const { [productId]: _, ...rest } = prev
+        return rest
+      }
+      return { ...prev, [productId]: next }
+    })
+  }
+
+  const handlePlaceBulkOrder = async () => {
+    if (!seller || bulkCartItems.length === 0) return
+    setBulkSubmitting(true)
+    setBulkMessage(null)
+
+    try {
+      const items: BulkOrderItem[] = bulkCartItems.map(([pid, qty]) => {
+        const p = products.find(pr => pr.id === pid)!
+        return {
+          product_id: p.id,
+          brand: p.brand,
+          name: p.name,
+          peptide: p.peptide,
+          dosage_mg: p.dosage_mg,
+          quantity: qty,
+          unit_retail_myr: p.price_myr,
+          unit_cost_myr: costPrice(p.price_myr),
+        }
+      })
+
+      const totalCost = items.reduce((s, i) => s + i.unit_cost_myr * i.quantity, 0)
+      const totalRetail = items.reduce((s, i) => s + i.unit_retail_myr * i.quantity, 0)
+
+      const result = await submitBulkOrder({
+        seller_id: seller.id,
+        seller_code: seller.seller_code,
+        items,
+        total_cost_myr: totalCost,
+        total_retail_myr: totalRetail,
+      })
+
+      if ('error' in result) {
+        setBulkMessage({ type: 'error', text: result.error })
+        return
+      }
+
+      // Send notifications
+      await Promise.allSettled([
+        notifySellerBulkOrderInvoice(result, seller.email),
+        notifyAdminBulkOrder(result, seller.email),
+      ])
+
+      setBulkCart({})
+      setBulkMessage({ type: 'success', text: `Order #${result.id.slice(0, 8)} placed! Check your email for the invoice.` })
+    } catch (err) {
+      setBulkMessage({ type: 'error', text: 'Failed to place order' })
+      console.error(err)
+    } finally {
+      setBulkSubmitting(false)
+    }
+  }
 
   // ── Handle status change ──────────────────────────────
   const handleStatusChange = useCallback(
@@ -270,7 +378,136 @@ export default function SellerDashboardPage() {
           </div>
         </div>
 
-        {/* ── Orders Table ───────────────────────────────── */}
+        {/* ── Bulk Order Pens ──────────────────────────── */}
+        <div className="holographic-border rounded-card bg-pharma-850/50 p-6 mb-8">
+          <h3 className="text-lg font-semibold text-white mb-1">🛒 Bulk Order Pens</h3>
+          <p className="text-pharma-400 text-sm mb-4">
+            Order pens at cost price: <span className="text-green-400 font-mono font-semibold">Retail − {seller.discount_pct}% discount − {seller.commission_pct}% commission</span>
+          </p>
+
+          {/* Products grid */}
+          {products.length === 0 ? (
+            <div className="p-8 text-center text-pharma-500 text-sm">Loading products...</div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+              {products.map(product => {
+                const cost = costPrice(product.price_myr)
+                const qty = bulkCart[product.id] || 0
+                return (
+                  <div
+                    key={product.id}
+                    className={`rounded-lg border p-4 transition-all ${
+                      qty > 0
+                        ? 'border-green-500/40 bg-green-500/5'
+                        : 'border-pharma-700/50 bg-pharma-900/40 hover:border-pharma-600/50'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <span className={`text-xs font-bold tracking-wider uppercase px-1.5 py-0.5 rounded ${
+                          product.brand === 'atheryx'
+                            ? 'text-purple-300 bg-purple-500/15'
+                            : 'text-blue-300 bg-blue-500/15'
+                        }`}>
+                          {product.brand === 'atheryx' ? 'ATHERYX' : 'ELYSION'}
+                        </span>
+                        <p className="text-sm text-white font-medium mt-1">{product.peptide}</p>
+                        <p className="text-xs text-pharma-400">{product.dosage_mg}mg — {product.volume_ml}</p>
+                      </div>
+                    </div>
+
+                    {/* Pricing */}
+                    <div className="flex items-baseline gap-2 mb-3">
+                      <span className="text-xs text-pharma-500 line-through">RM {product.price_myr}</span>
+                      <span className="text-lg font-bold text-green-400">RM {cost.toLocaleString()}</span>
+                      <span className="text-xs text-pharma-500">/pen</span>
+                    </div>
+
+                    {/* Quantity controls */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleBulkQtyChange(product.id, -1)}
+                          disabled={qty === 0}
+                          className="w-7 h-7 rounded flex items-center justify-center bg-pharma-800 border border-pharma-700 text-pharma-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm"
+                        >
+                          −
+                        </button>
+                        <span className="text-white font-mono text-sm w-6 text-center">{qty}</span>
+                        <button
+                          onClick={() => handleBulkQtyChange(product.id, 1)}
+                          className="w-7 h-7 rounded flex items-center justify-center bg-pharma-800 border border-pharma-700 text-pharma-300 hover:text-white transition-colors text-sm"
+                        >
+                          +
+                        </button>
+                      </div>
+                      {qty > 0 && (
+                        <span className="text-xs text-green-400 font-mono">
+                          RM {(cost * qty).toLocaleString()}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Cart summary */}
+          {bulkCartItems.length > 0 && (
+            <div className="border-t border-pharma-700/50 pt-4">
+              <h4 className="text-sm font-semibold text-white mb-3">Order Summary</h4>
+              <div className="space-y-2 mb-4">
+                {bulkCartItems.map(([pid, qty]) => {
+                  const p = products.find(pr => pr.id === pid)!
+                  const cost = costPrice(p.price_myr)
+                  return (
+                    <div key={pid} className="flex items-center justify-between text-sm">
+                      <span className="text-pharma-300">
+                        {p.brand === 'atheryx' ? 'ATHERYX' : 'ELYSION'} {p.peptide} {p.dosage_mg}mg × {qty}
+                      </span>
+                      <span className="text-white font-mono">RM {(cost * qty).toLocaleString()}</span>
+                    </div>
+                  )
+                })}
+              </div>
+              <div className="flex justify-between items-center border-t border-pharma-700/30 pt-3">
+                <div>
+                  <p className="text-xs text-pharma-500 line-through">Retail: RM {bulkCartRetail.toLocaleString()}</p>
+                  <p className="text-lg font-bold text-green-400">Cost: RM {bulkCartTotal.toLocaleString()}</p>
+                  <p className="text-xs text-accent-400">You save: RM {(bulkCartRetail - bulkCartTotal).toLocaleString()}</p>
+                </div>
+                <button
+                  onClick={handlePlaceBulkOrder}
+                  disabled={bulkSubmitting}
+                  className="px-6 py-3 rounded-btn bg-accent-500 hover:bg-accent-600 text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-wait"
+                >
+                  {bulkSubmitting ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Placing...
+                    </span>
+                  ) : (
+                    'Place Bulk Order'
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Message */}
+          {bulkMessage && (
+            <div className={`mt-4 text-sm rounded p-3 ${
+              bulkMessage.type === 'success'
+                ? 'text-green-400 bg-green-400/10 border border-green-400/20'
+                : 'text-red-400 bg-red-400/10 border border-red-400/20'
+            }`}>
+              {bulkMessage.text}
+            </div>
+          )}
+        </div>
+
+        {/* ── Orders Table ─────────────────────────────────  */}
         <div className="holographic-border rounded-card bg-pharma-850/50 overflow-hidden">
           <div className="px-6 py-4 border-b border-pharma-700/50">
             <h2 className="text-lg font-semibold text-white">Orders</h2>
