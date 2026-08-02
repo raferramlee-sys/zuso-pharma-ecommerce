@@ -4,6 +4,7 @@ import { registerSeller } from '../lib/auth'
 import { notifySellerWelcome, notifyAdminNewSeller } from '../lib/api'
 
 type FormErrors = {
+  name?: string
   email?: string
   password?: string
   confirmPassword?: string
@@ -17,6 +18,7 @@ export default function SellerRegistrationPage() {
   const navigate = useNavigate()
 
   const [form, setForm] = useState({
+    name: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -34,6 +36,10 @@ export default function SellerRegistrationPage() {
 
   function validate(): boolean {
     const errs: FormErrors = {}
+
+    if (!form.name.trim()) {
+      errs.name = 'Name is required'
+    }
 
     if (!form.email.trim()) {
       errs.email = 'Email is required'
@@ -83,6 +89,7 @@ export default function SellerRegistrationPage() {
     setLoading(true)
     try {
       const result = await registerSeller({
+        name: form.name.trim(),
         email: form.email.trim(),
         password: form.password,
         phone: form.phone.trim(),
@@ -194,6 +201,23 @@ export default function SellerRegistrationPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+            {/* Name */}
+            <div>
+              <label htmlFor="name" className={labelClass}>
+                Full Name
+              </label>
+              <input
+                id="name"
+                type="text"
+                value={form.name}
+                onChange={(e) => handleChange('name', e.target.value)}
+                placeholder="Your full name"
+                className={`${inputClass} ${errors.name ? 'border-red-400/50 focus:border-red-400' : ''}`}
+                autoComplete="name"
+              />
+              {errors.name && <p className={errorClass}>{errors.name}</p>}
+            </div>
+
             {/* Email */}
             <div>
               <label htmlFor="email" className={labelClass}>

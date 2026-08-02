@@ -25,6 +25,7 @@ function generateSellerCode(): string {
 }
 
 export async function registerSeller(data: {
+  name: string
   email: string
   password: string
   phone: string
@@ -39,6 +40,7 @@ export async function registerSeller(data: {
   const { data: seller, error: insertErr } = await supabase
     .from('sellers')
     .insert({
+      name: data.name.trim(),
       email: data.email.toLowerCase().trim(),
       password_hash: passwordHash,
       phone: data.phone,
