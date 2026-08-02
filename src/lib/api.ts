@@ -6,6 +6,7 @@
  */
 import { supabase } from './supabase'
 import type { PharmaOrder, Seller, CartItem, OrderStatus, Product, BulkOrder, BulkOrderItem, BulkOrderStatus } from '../types'
+import { generateBulkOrderPdf } from './generateBulkOrderPdf'
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 
@@ -270,15 +271,22 @@ export async function updateSellerConfig(
 
 // ─── Email Sending ──────────────────────────────────────
 
-export async function sendEmailNotification(params: { to: string; subject: string; html: string }): Promise<boolean> {
+export async function sendEmailNotification(params: { to: string; subject: string; html: string; attachments?: Array<{ filename: string; content: string; content_type: string }> }): Promise<boolean> {
   try {
+    const body: Record<string, unknown> = {
+      to: params.to,
+      subject: params.subject,
+      html: params.html,
+    };
+    if (params.attachments) body.attachments = params.attachments;
+
     const res = await fetch(`${SUPABASE_URL}/functions/v1/pharma-send-email`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
       },
-      body: JSON.stringify(params),
+      body: JSON.stringify(body),
     })
     return res.ok
   } catch (err) {
@@ -713,6 +721,18 @@ export async function decrementProductStock(productId: string, quantity: number)
   return !error
 }
 
+export async function uploadBulkOrderReceipt(orderId: string, file: File): Promise<string | null> {
+  const filePath = `bulk-receipts/${orderId}/${Date.now()}_${file.name}`
+  const { error } = await supabase.storage.from('pharma-receipts').upload(filePath, file)
+  if (error) { console.error('Upload error:', error); return null }
+  const { data: urlData } = supabase.storage.from('pharma-receipts').getPublicUrl(filePath)
+  const url = urlData?.publicUrl
+  if (url) {
+    await supabase.from('bulk_orders').update({ payment_receipt_url: url }).eq('id', orderId)
+  }
+  return url
+}
+
 // ─── Bulk Order Notifications ───────────────────────────
 
 /** 8. Seller bulk order invoice */
@@ -786,10 +806,25 @@ export async function notifySellerBulkOrderInvoice(order: BulkOrder, sellerEmail
     ${sectionFooter()}
   `
 
+  // Generate PDF invoice
+  let pdfBase64 = '';
+  try {
+    pdfBase64 = await generateBulkOrderPdf(order, sellerEmail);
+  } catch (e) {
+    console.error('PDF generation failed:', e);
+  }
+
   await sendEmailNotification({
     to: sellerEmail,
     subject: `Bulk Order Invoice #${order.id.slice(0, 8)} — ${mn(order.total_cost_myr)}`,
     html: buildEmailShell(body),
+    ...(pdfBase64 ? {
+      attachments: [{
+        filename: `ZUSO_Pharma_Invoice_${order.id.slice(0, 8)}.pdf`,
+        content: pdfBase64,
+        content_type: 'application/pdf',
+      }]
+    } : {}),
   })
 }
 

@@ -30,7 +30,7 @@ serve(async (req: Request) => {
       );
     }
 
-    const { to, subject, html } = await req.json();
+    const { to, subject, html, attachments } = await req.json();
 
     if (!to || !subject || !html) {
       return new Response(
@@ -39,6 +39,14 @@ serve(async (req: Request) => {
       );
     }
 
+    // Build send-gmail payload
+    const payload: Record<string, unknown> = {
+      to, subject, html,
+      html_body: html,
+      sender_name: "Zuso Pharma",
+    };
+    if (attachments) payload.attachments = attachments;
+
     // Call send-gmail with service role
     const res = await fetch(`${SUPABASE_URL}/functions/v1/send-gmail`, {
       method: "POST",
@@ -46,12 +54,7 @@ serve(async (req: Request) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${SERVICE_KEY}`,
       },
-      body: JSON.stringify({
-        to,
-        subject,
-        html,
-        sender_name: "Zuso Pharma",
-      }),
+      body: JSON.stringify(payload),
     });
 
     const result = await res.json();

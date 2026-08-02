@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import type { Seller, PharmaOrder, OrderStatus, CartItem, Product, BulkOrderItem } from '../types'
-import { ORDER_STATUS_LABELS, ORDER_STATUS_FLOW } from '../types'
+import type { Seller, PharmaOrder, OrderStatus, CartItem, Product, BulkOrderItem, BulkOrder, BulkOrderStatus } from '../types'
+import { ORDER_STATUS_LABELS, ORDER_STATUS_FLOW, BULK_ORDER_STATUS_LABELS } from '../types'
 import { getSellerBySession, logoutSeller } from '../lib/auth'
-import { getOrdersBySeller, updateOrderStatus, notifyPatientStatusChange, submitBulkOrder, getBulkOrdersBySeller, notifySellerBulkOrderInvoice, notifyAdminBulkOrder } from '../lib/api'
+import { getOrdersBySeller, updateOrderStatus, notifyPatientStatusChange, submitBulkOrder, getBulkOrdersBySeller, notifySellerBulkOrderInvoice, notifyAdminBulkOrder, uploadBulkOrderReceipt } from '../lib/api'
 import { supabase } from '../lib/supabase'
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
@@ -12,6 +12,14 @@ const STATUS_COLORS: Record<OrderStatus, string> = {
   preparing_order: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
   delivery: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
   delivered: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+}
+
+const BULK_STATUS_COLORS: Record<BulkOrderStatus, string> = {
+  pending_payment: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+  paid: 'bg-green-500/20 text-green-400 border-green-500/30',
+  preparing: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  delivered: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  cancelled: 'bg-red-500/20 text-red-400 border-red-500/30',
 }
 
 export default function SellerDashboardPage() {
@@ -28,6 +36,11 @@ export default function SellerDashboardPage() {
   const [bulkCart, setBulkCart] = useState<Record<string, number>>({})
   const [bulkSubmitting, setBulkSubmitting] = useState(false)
   const [bulkMessage, setBulkMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  // ── Bulk Order Tracking state ─────────────────────────
+  const [bulkOrders, setBulkOrders] = useState<BulkOrder[]>([])
+  const [bulkOrdersLoading, setBulkOrdersLoading] = useState(false)
+  const [uploadingReceiptId, setUploadingReceiptId] = useState<string | null>(null)
 
   // ── Auth check ────────────────────────────────────────
   useEffect(() => {
@@ -160,6 +173,42 @@ export default function SellerDashboardPage() {
     } finally {
       setBulkSubmitting(false)
     }
+  }
+
+  // ── Load seller's bulk orders ───────────────────────
+  const loadBulkOrders = useCallback(async () => {
+    if (!seller) return
+    setBulkOrdersLoading(true)
+    try {
+      const data = await getBulkOrdersBySeller(seller.id)
+      setBulkOrders(data)
+    } catch {
+      // silent
+    }
+    setBulkOrdersLoading(false)
+  }, [seller])
+
+  useEffect(() => {
+    if (seller) loadBulkOrders()
+  }, [seller, loadBulkOrders])
+
+  // ── Receipt upload handler ──────────────────────────
+  const handleReceiptUpload = async (orderId: string, file: File) => {
+    setUploadingReceiptId(orderId)
+    try {
+      const url = await uploadBulkOrderReceipt(orderId, file)
+      if (url) {
+        setBulkOrders(prev =>
+          prev.map(bo => bo.id === orderId ? { ...bo, payment_receipt_url: url } : bo)
+        )
+        setBulkMessage({ type: 'success', text: 'Receipt uploaded! Admin will verify.' })
+      } else {
+        setBulkMessage({ type: 'error', text: 'Upload failed' })
+      }
+    } catch {
+      setBulkMessage({ type: 'error', text: 'Upload failed' })
+    }
+    setUploadingReceiptId(null)
   }
 
   // ── Handle status change ──────────────────────────────
@@ -503,6 +552,139 @@ export default function SellerDashboardPage() {
                 : 'text-red-400 bg-red-400/10 border border-red-400/20'
             }`}>
               {bulkMessage.text}
+            </div>
+          )}
+        </div>
+
+        {/* ── My Bulk Orders ──────────────────────────── */}
+        <div className="holographic-border rounded-card bg-pharma-850/50 p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-white">📦 My Bulk Orders</h3>
+            <button
+              onClick={loadBulkOrders}
+              className="px-3 py-1.5 rounded-btn bg-pharma-800 hover:bg-pharma-700 border border-pharma-700 text-pharma-300 text-xs transition-colors"
+            >
+              Refresh
+            </button>
+          </div>
+
+          {bulkOrdersLoading ? (
+            <div className="p-8 text-center text-pharma-500 text-sm">Loading...</div>
+          ) : bulkOrders.length === 0 ? (
+            <div className="p-8 text-center">
+              <p className="text-pharma-400 text-sm mb-1">No bulk orders yet</p>
+              <p className="text-pharma-500 text-xs">Your pen stock orders will appear here with delivery progress</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {bulkOrders.map((bo) => {
+                const items = (bo.items || []) as BulkOrderItem[]
+                const itemSummary = items.map(i => `${i.brand === 'atheryx' ? 'ATH' : 'ELY'} ${i.dosage_mg}mg ×${i.quantity}`).join(', ')
+                const isUploading = uploadingReceiptId === bo.id
+
+                return (
+                  <div key={bo.id} className="border border-pharma-700/50 rounded-lg p-4 bg-pharma-900/30">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs font-mono text-pharma-400">#{bo.id.slice(0, 8)}</span>
+                          <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium border ${BULK_STATUS_COLORS[bo.status]}`}>
+                            {BULK_ORDER_STATUS_LABELS[bo.status]}
+                          </span>
+                        </div>
+                        <p className="text-xs text-pharma-400">{new Date(bo.created_at).toLocaleDateString('en-MY')}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-green-400 font-bold font-mono">RM {bo.total_cost_myr.toLocaleString()}</p>
+                        <p className="text-xs text-pharma-500 line-through">RM {bo.total_retail_myr.toLocaleString()}</p>
+                      </div>
+                    </div>
+
+                    {/* Items summary */}
+                    <p className="text-xs text-pharma-300 mb-3 truncate" title={itemSummary}>{itemSummary}</p>
+
+                    {/* Receipt upload for pending payment */}
+                    {bo.status === 'pending_payment' && (
+                      <div className="flex items-center gap-3 pt-3 border-t border-pharma-700/30">
+                        <label className={`flex items-center gap-2 px-3 py-2 rounded-btn text-xs font-medium cursor-pointer transition-colors ${
+                          isUploading
+                            ? 'bg-pharma-700 text-pharma-400 cursor-wait'
+                            : 'bg-accent-500/10 border border-accent-500/20 text-accent-400 hover:bg-accent-500/20'
+                        }`}>
+                          {isUploading ? (
+                            <>
+                              <span className="w-3 h-3 border-2 border-accent-400 border-t-transparent rounded-full animate-spin" />
+                              Uploading...
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                              Upload Receipt
+                            </>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/*,.pdf"
+                            className="hidden"
+                            disabled={isUploading}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0]
+                              if (file) handleReceiptUpload(bo.id, file)
+                              e.target.value = ''
+                            }}
+                          />
+                        </label>
+                        {bo.payment_receipt_url && (
+                          <a
+                            href={bo.payment_receipt_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-accent-400 hover:underline"
+                          >
+                            View Receipt
+                          </a>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Delivery progress indicator */}
+                    {bo.status !== 'cancelled' && bo.status !== 'pending_payment' && (
+                      <div className="pt-3 border-t border-pharma-700/30">
+                        <div className="flex items-center justify-between">
+                          {(['paid', 'preparing', 'delivered'] as BulkOrderStatus[]).map((s, i) => {
+                            const statusIndex = (['paid', 'preparing', 'delivered'] as BulkOrderStatus[]).indexOf(bo.status)
+                            const isDone = i <= statusIndex
+                            const isCurrent = i === statusIndex
+                            return (
+                              <div key={s} className="flex flex-col items-center flex-1">
+                                <div className={`w-3 h-3 rounded-full mb-1 ${
+                                  isCurrent ? 'bg-accent-500 ring-2 ring-accent-500/30' :
+                                  isDone ? 'bg-green-500' : 'bg-pharma-700'
+                                }`} />
+                                <span className={`text-[10px] text-center ${
+                                  isCurrent ? 'text-accent-400 font-medium' :
+                                  isDone ? 'text-pharma-300' : 'text-pharma-600'
+                                }`}>
+                                  {s === 'paid' ? 'Paid' : s === 'preparing' ? 'Preparing' : 'Delivered'}
+                                </span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                        {/* Connecting lines */}
+                        <div className="relative h-0.5 bg-pharma-700/50 -mt-3.5 mx-6">
+                          <div
+                            className="absolute inset-y-0 left-0 bg-accent-500/50 transition-all"
+                            style={{
+                              width: `${(((['paid', 'preparing', 'delivered'] as BulkOrderStatus[]).indexOf(bo.status)) / 2) * 100}%`
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
