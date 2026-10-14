@@ -57,22 +57,33 @@ export default function TestimonialCarousel() {
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([])
   const touchStartX = useRef(0)
   const touchEndX = useRef(0)
+  const sectionRef = useRef<HTMLElement>(null)
+  const [inView, setInView] = useState(false)
+
+  // Don't fetch or play the (large) testimonial videos until the carousel is on screen
+  useEffect(() => {
+    const section = sectionRef.current
+    if (!section) return
+    const io = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { rootMargin: '200px 0px' })
+    io.observe(section)
+    return () => io.disconnect()
+  }, [])
 
   const playActiveVideo = useCallback(() => {
     videoRefs.current.forEach((video, i) => {
       if (!video) return
-      if (i === activeIndex) {
+      if (i === activeIndex && inView) {
         video.currentTime = 0
         video.play().catch(() => {})
       } else {
         video.pause()
       }
     })
-  }, [activeIndex])
+  }, [activeIndex, inView])
 
   useEffect(() => {
     playActiveVideo()
-  }, [activeIndex, playActiveVideo])
+  }, [playActiveVideo])
 
   useEffect(() => {
     videoRefs.current.forEach((video) => {
@@ -99,11 +110,11 @@ export default function TestimonialCarousel() {
   }
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+    <section ref={sectionRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
       {/* Section Header */}
       <div className="text-center mb-10">
-        <h2 className="text-2xl sm:text-3xl font-bold text-white">
-          Real Transformations
+        <h2 className="heading-display text-4xl sm:text-5xl text-white">
+          Real <em>Transformations</em>
         </h2>
         <p className="mt-2 text-pharma-400 text-sm">
           See what our patients and staff have experienced
@@ -148,7 +159,7 @@ export default function TestimonialCarousel() {
                 muted
                 loop
                 playsInline
-                preload="auto"
+                preload="none"
                 className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-400 ${
                   i === activeIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
                 }`}

@@ -4,9 +4,24 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <!-- Self-hosted fonts (see @font-face in src/index.css) -->
+    <link rel="preload" href="/fonts/inter-latin-wght.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/fraunces-latin-wght.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/fraunces-latin-wght-italic.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" as="image" href="/atheryx-pen.webp" fetchpriority="high" />
+
+    <!-- Preloader: first visit only; hides on window load, hard-capped at 1.5s -->
+    <style>
+      #zp-preloader{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;background:#06061a;color:#fff;font-family:'Inter Variable',system-ui,sans-serif;transition:opacity .5s ease,visibility .5s ease}
+      #zp-preloader.zp-done{opacity:0;visibility:hidden}
+      #zp-preloader .zp-mark{font-size:1.5rem;font-weight:700;letter-spacing:-.02em}
+      #zp-preloader .zp-mark b{color:#7c3aed;font-weight:700}
+      #zp-preloader .zp-line{font-family:'Fraunces Variable',Georgia,serif;font-style:italic;font-size:.95rem;color:#8080b8}
+      #zp-preloader .zp-bar{width:120px;height:2px;border-radius:2px;background:#1a1a4a;overflow:hidden}
+      #zp-preloader .zp-bar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#7c3aed,#c4b5fd);transform-origin:left;animation:zp-fill 1.3s cubic-bezier(.65,0,.35,1) forwards}
+      @keyframes zp-fill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+      @media (prefers-reduced-motion:reduce){#zp-preloader,#zp-preloader .zp-bar i{transition:none;animation:none}}
+    </style>
 
     <!-- Primary Meta Tags -->
     <title>ATHERYX™ & ELYSION™ — FDA Approved Peptide Therapy Malaysia</title>
@@ -34,6 +49,23 @@
     <meta name="twitter:image" content="https://pharma.zuso-boltz-agentic.app/og-image.png" />
   </head>
   <body>
+    <div id="zp-preloader" role="status" aria-live="polite">
+      <span class="zp-mark"><b>PHARMA</b>.zuso</span>
+      <span class="zp-line">Preparing your consultation…</span>
+      <span class="zp-bar"><i></i></span>
+    </div>
+    <script>
+      (function () {
+        var el = document.getElementById('zp-preloader')
+        var seen = false
+        try { seen = localStorage.getItem('zp:visited') === '1'; localStorage.setItem('zp:visited', '1') } catch (e) {}
+        if (seen) { el.remove(); return }
+        var done = function () { if (!el.isConnected) return; el.classList.add('zp-done'); setTimeout(function () { el.remove() }, 500) }
+        var start = Date.now()
+        window.addEventListener('load', function () { setTimeout(done, Math.max(0, 700 - (Date.now() - start))) })
+        setTimeout(done, 1500) // hard cap
+      })()
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

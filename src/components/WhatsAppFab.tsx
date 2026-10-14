@@ -14,7 +14,7 @@ export default function WhatsAppFab() {
     <>
       <button
         onClick={() => setPanelOpen(true)}
-        className="fixed bottom-6 left-6 z-50 flex items-center gap-3 px-4 py-3 rounded-full shadow-2xl transition-all duration-300 border bg-[#25D366] border-[#1da851] shadow-[#25D366]/30 hover:scale-105 hover:shadow-[#25D366]/50"
+        className="fixed bottom-6 left-6 z-50 hidden md:flex items-center gap-3 px-4 py-3 rounded-full shadow-2xl transition-all duration-300 border bg-[#25D366] border-[#1da851] shadow-[#25D366]/30 hover:scale-105 hover:shadow-[#25D366]/50"
         aria-label="Chat WhatsApp Zuso Pharma"
       >
         {/* WhatsApp icon */}

@@ -64,7 +64,7 @@ export default function DiscountFab() {
       {/* ── Floating button ─────────────────────────────── */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-full shadow-2xl transition-all duration-300 border ${
+        className={`fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-6 right-4 md:right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-full shadow-2xl transition-all duration-300 border ${
           isActive
             ? 'bg-green-600 border-green-400 shadow-green-500/30 animate-pulse'
             : 'bg-accent-500 border-accent-400 shadow-accent-500/30 hover:scale-105'
