@@ -175,3 +175,11 @@ export function getDiscountedPrice(originalPrice: number, discountPct: number): 
   if (!discountPct) return originalPrice
   return Math.round(originalPrice * (1 - discountPct / 100))
 }
+
+/** Product-level markdown: returns the % off when original_price_myr is set and higher than price_myr, else 0. */
+export function getListPriceDiscountPct(product: { price_myr: number; original_price_myr?: number | null }): number {
+  const orig = Number(product.original_price_myr || 0)
+  const price = Number(product.price_myr)
+  if (!orig || orig <= price) return 0
+  return Math.round((1 - price / orig) * 100)
+}

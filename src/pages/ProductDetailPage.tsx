@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async'
 import { useParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useCart } from '../hooks/useCart'
-import { useSellerDiscount, getDiscountedPrice } from '../hooks/useSellerDiscount'
+import { useSellerDiscount, getDiscountedPrice, getListPriceDiscountPct } from '../hooks/useSellerDiscount'
 import type { Product } from '../types'
 
 export default function ProductDetailPage() {
@@ -209,6 +209,14 @@ export default function ProductDetailPage() {
                     <p className="text-3xl font-bold text-green-400">
                       RM {getDiscountedPrice(product.price_myr, discountPct).toLocaleString()}
                       <span className="ml-2 text-sm font-medium text-green-400/70">−{discountPct}%</span>
+                    </p>
+                  </>
+                ) : getListPriceDiscountPct(product) > 0 ? (
+                  <>
+                    <p className="text-sm text-pharma-500 line-through">RM {Number(product.original_price_myr).toLocaleString()}</p>
+                    <p className="text-3xl font-bold text-green-400">
+                      RM {product.price_myr.toLocaleString()}
+                      <span className="ml-2 text-sm font-medium text-green-400/70">−{getListPriceDiscountPct(product)}%</span>
                     </p>
                   </>
                 ) : (

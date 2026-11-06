@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useCart } from '../../hooks/useCart'
-import { useSellerDiscount, getDiscountedPrice } from '../../hooks/useSellerDiscount'
+import { useSellerDiscount, getDiscountedPrice, getListPriceDiscountPct } from '../../hooks/useSellerDiscount'
 import type { Product } from '../../types'
 
 /* SVG outline icons matching ATHERYX promo graphic */
@@ -114,6 +114,12 @@ export default function ProductCard({ product }: { product: Product }) {
                   <span className="text-lg font-bold text-green-400">RM {getDiscountedPrice(product.price_myr, discountPct).toLocaleString()}</span>
                   <span className="text-xs text-green-400/70">−{discountPct}%</span>
                 </>
+              ) : getListPriceDiscountPct(product) > 0 ? (
+                <>
+                  <span className="block text-sm text-pharma-500 line-through">RM {Number(product.original_price_myr).toLocaleString()}</span>
+                  <span className="text-xl font-bold text-green-400">RM {product.price_myr.toLocaleString()}</span>
+                  <span className="ml-1 text-xs text-green-400/70">−{getListPriceDiscountPct(product)}%</span>
+                </>
               ) : (
                 <p className="text-xl font-bold text-white">RM {product.price_myr.toLocaleString()}</p>
               )}
@@ -212,6 +218,12 @@ export default function ProductCard({ product }: { product: Product }) {
                 <span className="text-sm text-pharma-500 line-through">RM {product.price_myr.toLocaleString()}</span>
                 <span className="text-lg font-bold text-green-400">RM {getDiscountedPrice(product.price_myr, discountPct).toLocaleString()}</span>
                 <span className="text-xs text-green-400/70">−{discountPct}%</span>
+              </>
+            ) : getListPriceDiscountPct(product) > 0 ? (
+              <>
+                <span className="block text-sm text-pharma-500 line-through">RM {Number(product.original_price_myr).toLocaleString()}</span>
+                <span className="text-xl font-bold text-green-400">RM {product.price_myr.toLocaleString()}</span>
+                <span className="ml-1 text-xs text-green-400/70">−{getListPriceDiscountPct(product)}%</span>
               </>
             ) : (
               <p className="text-xl font-bold text-white">RM {product.price_myr.toLocaleString()}</p>

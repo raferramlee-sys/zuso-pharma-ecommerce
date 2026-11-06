@@ -22,6 +22,7 @@ export default function ProductEditModal({ mode, product, onSave, onClose }: Pro
     peptide: product?.peptide || '',
     dosage_mg: product?.dosage_mg?.toString() || '',
     price_myr: product?.price_myr?.toString() || '',
+    original_price_myr: product?.original_price_myr?.toString() || '',
     stock: product?.stock?.toString() || '',
     active: product?.active ?? true,
     is_ezipen: product?.is_ezipen ?? false,
@@ -58,6 +59,7 @@ export default function ProductEditModal({ mode, product, onSave, onClose }: Pro
         peptide: form.peptide,
         dosage_mg: Number(form.dosage_mg),
         price_myr: Number(form.price_myr),
+        original_price_myr: form.original_price_myr ? Number(form.original_price_myr) : null,
         stock: form.stock ? Number(form.stock) : 0,
         active: form.active,
         is_ezipen: form.is_ezipen,
@@ -207,6 +209,18 @@ export default function ProductEditModal({ mode, product, onSave, onClose }: Pro
                 onChange={e => update('price_myr', e.target.value)}
                 className={inputClass}
                 placeholder="778"
+                step="1"
+                min="0"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Original Price (RM) — optional, shown struck through</label>
+              <input
+                type="number"
+                value={form.original_price_myr}
+                onChange={e => update('original_price_myr', e.target.value)}
+                className={inputClass}
+                placeholder="1088"
                 step="1"
                 min="0"
               />

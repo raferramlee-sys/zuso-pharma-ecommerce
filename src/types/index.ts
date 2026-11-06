@@ -9,6 +9,8 @@ export interface Product {
   per_dose_mg: number
   volume_ml: string
   price_myr: number
+  /** Pre-discount price shown struck through when higher than price_myr */
+  original_price_myr?: number | null
   description: string
   features: string[]
   images: string[]
