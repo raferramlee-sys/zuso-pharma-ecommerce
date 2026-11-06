@@ -33,6 +33,7 @@ export interface CartItem {
   peptide: string
   dosage_mg: number
   price_myr: number
+  original_price_myr?: number | null
   quantity: number
   image?: string
 }

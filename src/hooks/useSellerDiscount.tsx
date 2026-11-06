@@ -183,3 +183,16 @@ export function getListPriceDiscountPct(product: { price_myr: number; original_p
   if (!orig || orig <= price) return 0
   return Math.round((1 - price / orig) * 100)
 }
+
+/**
+ * Products already marked down (original_price_myr > price_myr) are excluded from seller-code discounts.
+ * Cart items saved before original_price_myr existed are treated as eligible.
+ */
+export function isSellerDiscountEligible(product: { price_myr: number; original_price_myr?: number | null }): boolean {
+  return getListPriceDiscountPct(product) === 0
+}
+
+/** Unit price after the seller discount, if the product is eligible for it. */
+export function getSellerPrice(product: { price_myr: number; original_price_myr?: number | null }, discountPct: number): number {
+  return isSellerDiscountEligible(product) ? getDiscountedPrice(product.price_myr, discountPct) : product.price_myr
+}

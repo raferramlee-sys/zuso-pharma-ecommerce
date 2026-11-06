@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useCart } from '../../hooks/useCart'
-import { useSellerDiscount, getDiscountedPrice, getListPriceDiscountPct } from '../../hooks/useSellerDiscount'
+import { useSellerDiscount, getDiscountedPrice, getListPriceDiscountPct, isSellerDiscountEligible } from '../../hooks/useSellerDiscount'
 import type { Product } from '../../types'
 
 /* SVG outline icons matching ATHERYX promo graphic */
@@ -108,7 +108,7 @@ export default function ProductCard({ product }: { product: Product }) {
           <div className="flex items-end justify-between">
             <div>
               <p className="text-[10px] text-pharma-500">Price</p>
-              {isActive && discountPct > 0 ? (
+              {isActive && discountPct > 0 && isSellerDiscountEligible(product) ? (
                 <>
                   <span className="text-sm text-pharma-500 line-through">RM {product.price_myr.toLocaleString()}</span>
                   <span className="text-lg font-bold text-green-400">RM {getDiscountedPrice(product.price_myr, discountPct).toLocaleString()}</span>
@@ -213,7 +213,7 @@ export default function ProductCard({ product }: { product: Product }) {
         <div className="flex items-end justify-between">
           <div>
             <p className="text-[10px] text-pharma-500">Price</p>
-            {isActive && discountPct > 0 ? (
+            {isActive && discountPct > 0 && isSellerDiscountEligible(product) ? (
               <>
                 <span className="text-sm text-pharma-500 line-through">RM {product.price_myr.toLocaleString()}</span>
                 <span className="text-lg font-bold text-green-400">RM {getDiscountedPrice(product.price_myr, discountPct).toLocaleString()}</span>

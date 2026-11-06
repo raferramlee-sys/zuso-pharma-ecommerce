@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom'
 import { useCart } from '../../hooks/useCart'
-import { useSellerDiscount, getDiscountedPrice } from '../../hooks/useSellerDiscount'
+import { useSellerDiscount, getSellerPrice } from '../../hooks/useSellerDiscount'
 
 export default function CartDrawer() {
   const { items, isOpen, setIsOpen, removeItem, updateQty, subtotal, itemCount } = useCart()
   const { discountPct, sellerCode, isActive } = useSellerDiscount()
-  const discountedSubtotal = isActive ? items.reduce((sum, i) => sum + getDiscountedPrice(i.price_myr, discountPct) * i.quantity, 0) : subtotal
+  const discountedSubtotal = isActive ? items.reduce((sum, i) => sum + getSellerPrice(i, discountPct) * i.quantity, 0) : subtotal
   const discountAmount = subtotal - discountedSubtotal
 
   if (!isOpen) return null

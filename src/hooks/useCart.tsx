@@ -52,6 +52,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         peptide: product.peptide,
         dosage_mg: product.dosage_mg,
         price_myr: product.price_myr,
+        original_price_myr: product.original_price_myr ?? null,
         quantity: qty,
         image: product.images?.[0],
       }]

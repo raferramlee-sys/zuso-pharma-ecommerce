@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../hooks/useCart'
-import { useSellerDiscount, getDiscountedPrice } from '../hooks/useSellerDiscount'
+import { useSellerDiscount, getSellerPrice, isSellerDiscountEligible } from '../hooks/useSellerDiscount'
 
 export default function CartPage() {
   const { items, removeItem, updateQty, subtotal, itemCount, clearCart } = useCart()
@@ -8,7 +8,7 @@ export default function CartPage() {
   const navigate = useNavigate()
 
   const discountedSubtotal = isActive
-    ? items.reduce((sum, i) => sum + getDiscountedPrice(i.price_myr, discountPct) * i.quantity, 0)
+    ? items.reduce((sum, i) => sum + getSellerPrice(i, discountPct) * i.quantity, 0)
     : subtotal
   const discountAmount = subtotal - discountedSubtotal
 
@@ -68,10 +68,10 @@ export default function CartPage() {
               </div>
 
               <div className="text-right min-w-[80px]">
-                {isActive && discountPct > 0 ? (
+                {isActive && discountPct > 0 && isSellerDiscountEligible(item) ? (
                   <>
                     <p className="text-xs text-pharma-500 line-through">RM {(item.price_myr * item.quantity).toLocaleString()}</p>
-                    <p className="text-sm font-semibold text-green-400">RM {(getDiscountedPrice(item.price_myr, discountPct) * item.quantity).toLocaleString()}</p>
+                    <p className="text-sm font-semibold text-green-400">RM {(getSellerPrice(item, discountPct) * item.quantity).toLocaleString()}</p>
                   </>
                 ) : (
                   <p className="text-sm font-semibold text-white">RM {(item.price_myr * item.quantity).toLocaleString()}</p>

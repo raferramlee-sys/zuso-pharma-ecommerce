@@ -1,7 +1,7 @@
 import { useState, type FormEvent, type ChangeEvent, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../hooks/useCart'
-import { useSellerDiscount } from '../hooks/useSellerDiscount'
+import { useSellerDiscount, getSellerPrice } from '../hooks/useSellerDiscount'
 import { lookupSellerCode, submitOrder, uploadReceipt, notifyAllNewOrder } from '../lib/api'
 import type { CartItem, Seller } from '../types'
 
@@ -32,7 +32,8 @@ export default function CheckoutPage() {
 
   // Computed totals
   const discountPct = appliedSeller?.discount_pct ?? 0
-  const discountMyr = Math.round(subtotal * (discountPct / 100))
+  // Seller discount only applies to items not already marked down (see isSellerDiscountEligible)
+  const discountMyr = items.reduce((sum, i) => sum + (i.price_myr - getSellerPrice(i, discountPct)) * i.quantity, 0)
   const commissionPct = appliedSeller?.commission_pct ?? 0
   const commissionMyr = Math.round((subtotal - discountMyr) * (commissionPct / 100))
   const totalMyr = subtotal - discountMyr
